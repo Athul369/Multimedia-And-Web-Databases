@@ -2,6 +2,7 @@ import argparse
 import os
 import glob
 import shutil
+from LocalBinaryPatterns import LBP
 from ColorMoments import CM
 from SIFT import SIFT
 
@@ -42,6 +43,11 @@ if args.single_task:
         lst = md.getFeatureDescriptors()
         md.createFeatureOutputFile(lst)
 
+    elif args.model == 'LBP':
+        md = LBP(imagePath)
+        lst = md.getFeatureDescriptors()
+        md.createFeatureOutputFile(lst)
+
     elif args.model == 'SIFT':
         md = SIFT(imagePath)
         lst = md.getFeatureDescriptors()
@@ -63,13 +69,19 @@ if args.ranking:
 
 ####### TASK 2 #######
 if args.model == 'CM':
-    for image in glob.glob(os.path.join(dirpath,"*.jpg")):
+    for image in glob.glob(os.path.join(dirpath, "*.jpg")):
         md = CM(image)
         lst = md.getFeatureDescriptors()
         md.createFeatureOutputFile(lst)
 
+elif args.model == 'LBP':
+    for image in glob.glob(os.path.join(dirpath, '*.jpg')):
+        md = LBP(image)
+        lst = md.getFeatureDescriptors()
+        md.createFeatureOutputFile(lst)
+
 elif args.model == 'SIFT':
-    for image in glob.glob(os.path.join(dirpath,"*.jpg")):
+    for image in glob.glob(os.path.join(dirpath, "*.jpg")):
         md = SIFT(image)
         lst = md.getFeatureDescriptors()
         md.createFeatureOutputFile(lst)
@@ -83,14 +95,14 @@ else:
 ######## TASK 3 #######################
 if args.model == 'CM' and args.ranking:
     rank_dict = {}
-    head =""
-    for image in glob.glob(os.path.join(dirpath,"*.jpg")):
+    head = ""
+    for image in glob.glob(os.path.join(dirpath, "*.jpg")):
         md = CM(image)
         x = md.compareImages(imagePath)
         if x == -1:
             continue
         head, tail = os.path.split(image)
-        rank_dict.update({tail : x})
+        rank_dict.update({tail: x})
 
     k = 0
     res_dir = os.path.join(curpath, '..', 'output', 'CM', 'match')
@@ -103,20 +115,46 @@ if args.model == 'CM' and args.ranking:
         if k < args.kimage:
             print(key + " has matching score:: " + str(value))
             shutil.copy(os.path.join(head, key), res_dir)
-            k+=1
+            k += 1
+        else:
+            break
+
+elif args.model == 'LBP' and args.ranking:
+    rank_dict = {}
+    for image in glob.glob(os.path.join(dirpath, '*.jpg')):
+        md = LBP(image)
+        x = md.compareImages(imagePath)
+        if x == -1:
+            continue
+        head, tail = os.path.split(image)
+        rank_dict.update({tail: x})
+
+    k = 0
+    res_dir = os.path.join(curpath, '..', 'output', 'LBP', 'match')
+    if os.path.exists(res_dir):
+        shutil.rmtree(res_dir)
+    os.mkdir(res_dir)
+
+    print("\n\nNow printing top {} matched Images and their ranks".format(args.kimage))
+    for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True): # For cosine similarity
+    # for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):             # For Euclidean Distance
+        if k < args.kimage:
+            print(key + " has matching score:: " + str(value))
+            shutil.copy(os.path.join(head, key), res_dir)
+            k += 1
         else:
             break
 
 elif args.model == 'SIFT' and args.ranking:
     rank_dict = {}
     head = ""
-    for image in glob.glob(os.path.join(dirpath,"*.jpg")):
+    for image in glob.glob(os.path.join(dirpath, "*.jpg")):
         md = SIFT(image)
         x = md.compareImages(imagePath)
         if x == -1:
             continue
         head, tail = os.path.split(image)
-        rank_dict.update({tail : x})
+        rank_dict.update({tail: x})
 
     k = 0
     res_dir = os.path.join(curpath, '..', 'output', 'SIFT', 'match')
@@ -126,8 +164,8 @@ elif args.model == 'SIFT' and args.ranking:
     print("\n\nNow printing top {} matched Images and their matching scores".format(args.kimage))
     for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):
         if k < args.kimage:
-            print(key +  " has matching score:: " + str(value))
+            print(key + " has matching score:: " + str(value))
             shutil.copy(os.path.join(head, key), res_dir)
-            k+=1
+            k += 1
         else:
             break
