@@ -52,6 +52,11 @@ if args.single_task:
         md = SIFT(imagePath)
         lst = md.getFeatureDescriptors()
         md.createFeatureOutputFile(lst)
+        
+    elif args.model == 'HOG':
+        md = HOG(imagePath)
+        lst = md.getFeatureDescriptors()
+        md.createFeatureOutputFile(lst)
 
     else:
         print("Please provide proper model name")
@@ -83,6 +88,12 @@ elif args.model == 'LBP':
 elif args.model == 'SIFT':
     for image in glob.glob(os.path.join(dirpath, "*.jpg")):
         md = SIFT(image)
+        lst = md.getFeatureDescriptors()
+        md.createFeatureOutputFile(lst)
+        
+elif args.model == 'HOG':
+    for image in glob.glob(os.path.join(dirpath, "*.jpg")):
+        md = HOG(image)
         lst = md.getFeatureDescriptors()
         md.createFeatureOutputFile(lst)
 
