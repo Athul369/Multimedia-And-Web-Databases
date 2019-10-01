@@ -5,6 +5,7 @@ import shutil
 from LocalBinaryPatterns import LBP
 from ColorMoments import CM
 from SIFT import SIFT
+from HOGmain import HOG
 
 #Parsing the command line arguments
 parser = argparse.ArgumentParser()
@@ -174,6 +175,32 @@ elif args.model == 'SIFT' and args.ranking:
     os.mkdir(res_dir)
     print("\n\nNow printing top {} matched Images and their matching scores".format(args.kimage))
     for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):
+        if k < args.kimage:
+            print(key + " has matching score:: " + str(value))
+            shutil.copy(os.path.join(head, key), res_dir)
+            k += 1
+        else:
+            break
+            
+elif args.model == 'HOG' and args.ranking:
+    rank_dict = {}
+    for image in glob.glob(os.path.join(dirpath, '*.jpg')):
+        md = HOG(image)
+        x = md.compareImages(imagePath)
+        if x == -1:
+            continue
+        head, tail = os.path.split(image)
+        rank_dict.update({tail: x})
+
+    k = 0
+    res_dir = os.path.join(curpath, '..', 'output', 'HOG', 'match')
+    if os.path.exists(res_dir):
+        shutil.rmtree(res_dir)
+    os.mkdir(res_dir)
+
+    print("\n\nNow printing top {} matched Images and their ranks".format(args.kimage))
+    for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):  # For cosine similarity
+        # for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):             # For Euclidean Distance
         if k < args.kimage:
             print(key + " has matching score:: " + str(value))
             shutil.copy(os.path.join(head, key), res_dir)
