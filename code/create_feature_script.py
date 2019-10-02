@@ -199,8 +199,7 @@ elif args.model == 'HOG' and args.ranking:
     os.mkdir(res_dir)
 
     print("\n\nNow printing top {} matched Images and their ranks".format(args.kimage))
-    for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):  # For cosine similarity
-        # for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):             # For Euclidean Distance
+    for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):   # For Euclidean Distance
         if k < args.kimage:
             print(key + " has matching score:: " + str(value))
             shutil.copy(os.path.join(head, key), res_dir)
