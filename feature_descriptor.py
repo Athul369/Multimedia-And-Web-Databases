@@ -37,7 +37,7 @@ def calculate_fd(path):
         # dict["HOG"] = lst.tolist()
         # print(type(lst.tolist()))
 
-        rec = mydb.image_models.insert_one(dict)
+        rec = imagedb.image_models.insert_one(dict)
 
 ## Main
 path = input("Enter Path: ")
