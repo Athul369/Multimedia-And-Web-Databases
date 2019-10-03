@@ -34,7 +34,7 @@ class LBP(ModelBase):
         if not os.path.exists(self.grayFile):
             cv2.imwrite(self.grayFile, img_gray)
 
-        """ Splits the Gray scale image into blocks of 100 by 100 pixels each. 
+        """ Splits the Gray scale image into blocks of 100 by 100 pixels each.
                     This results in 192 blocks for the image. """
         gray_blocks = np.array([img_gray[i:i + self.b_dimensions, j:j + self.b_dimensions]
                                 for j in range(0, self.w, self.b_dimensions)
@@ -51,7 +51,7 @@ class LBP(ModelBase):
             (hist, _) = np.histogram(lbp.ravel(), bins=np.arange(0, self.no_points + 3),
                                      range=(0, self.no_points + 2))
             """ Add the LBP data for the current image block to the list containing all LBP data for the image. """
-            feature_descriptors.append(list(hist))
+            feature_descriptors.append(list([x.item() for x in hist]))
             j += 1
 
         return feature_descriptors
