@@ -11,27 +11,41 @@ class SIFT(ModelBase):
     def __init__(self, imagname):
         super().__init__(imagname)
         head, tail = os.path.split(imagname)
-        self.resultFile = "../output/SIFT/" + tail[:len(tail) - 4] + ".csv"
+        self.resultFile = "./output/SIFT/" + tail[:len(tail) - 4] + ".csv"
         self.labelFile = "../output/SIFT_" + tail[:len(tail) - 4] + ".jpg"
 
-    def getFeatureDescriptors(self):
+    def getFeatureDescriptors(self, vector_size=70):
         if os.path.exists(self.resultFile):
             return []
 
         #Reading the image
         img = cv2.imread(self.imgLoc)
-        # Changing it to GRAY format
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        sift = cv2.xfeatures2d.SIFT_create()
-        # Computing key points
-        keypoints = sift.detect(gray, None)
-        # Drawing keypoints to an image
-        img = cv2.drawKeypoints(img, keypoints, img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        cv2.imwrite(self.labelFile, img)
-        #creating feature descriptors based on key points
-        keypoints, feature_descriptor = sift.detectAndCompute(gray, None)
-        print(keypoints)
-        return feature_descriptor
+        try:
+            # Changing it to GRAY format
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            sift = cv2.xfeatures2d.SIFT_create()
+            # Computing key points
+            keypoints = sift.detect(gray, None)
+            # Number of keypoints is varies depend on image size and color pallet
+            # Sorting them based on keypoint response value(bigger is better)
+            kps = sorted(keypoints, key=lambda x: -x.response)[:vector_size]
+            # computing descriptors vector
+            kps, dsc = sift.compute(img, kps)
+            # Making descriptor of same size
+            # Descriptor vector size is 128
+            if len(dsc) < vector_size:
+                # if we have less the 50 descriptors then just adding zeros at the
+                # end of our feature vector
+                concat = vector_size - len(dsc)
+                dsc = np.concatenate((dsc, np.zeros((concat, 128))), axis=0)
+            descriptor = dsc
+
+        except cv2.error as e:
+            print('Error: ', e)
+            return None
+
+        return descriptor
+
 
     def createFeatureOutputFile(self, feature_descriptor):
         if not os.path.exists(self.resultFile):
@@ -46,25 +60,21 @@ class SIFT(ModelBase):
         des1 = des1.values
         des2 = des2.values
 
-        similarity_value = []
+        all_dist = []
+        Best_Matches = []
+
         for des1_val in des1:
             #Comparing with all the descriptors
-            key_arr = PriorityQueue()
+
             for des2_val in des2:
                 #calculating euclidean distance
-                euc_dis = np.square(np.subtract(des1_val, des2_val))
-                val = np.sqrt(euc_dis.sum(0))
-                #Adding distance to priority queues
-                key_arr.put(val)
-            dis1 = key_arr.get()
-            dis2 = key_arr.get()
-            # Decide if this keypoint is valid or not
-            if dis1/dis2 < 0.7:
-                similarity_value.append(dis1)
+                distance = (sum([(a - b) ** 2 for a, b in zip(des1_val, des2_val)])) ** 0.5
+                all_dist.append(distance)
+            min_dist = min(all_dist)
+            Best_Matches.append(min_dist)
+        distance_ = int(sum(Best_Matches) / 70)
 
-        similarity_value
-        #print(similarity_value)
-        return len(similarity_value)
+        return distance_
 
     def compareImages(self, imgLoc):
         obj2 = SIFT(imgLoc)

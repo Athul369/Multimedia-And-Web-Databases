@@ -25,13 +25,13 @@ if args.dir == "None":
 
 curpath = os.path.dirname(os.path.abspath(__file__))
 
-dirpath = os.path.join(curpath, '..', args.dir)
+dirpath = os.path.join(curpath, args.dir)
 
 if not os.path.exists(dirpath):
     print("Please provide proper directory location")
     exit(1)
 
-imagePath = os.path.join(curpath, '..', args.dir, args.imageLoc)
+imagePath = os.path.join(curpath, args.dir, args.imageLoc)
 
 ##   TASK1 #####
 if args.single_task:
@@ -169,12 +169,12 @@ elif args.model == 'SIFT' and args.ranking:
         rank_dict.update({tail: x})
 
     k = 0
-    res_dir = os.path.join(curpath, '..', 'output', 'SIFT', 'match')
+    res_dir = os.path.join(curpath, 'output', 'SIFT', 'match')
     if os.path.exists(res_dir):
         shutil.rmtree(res_dir)
     os.mkdir(res_dir)
     print("\n\nNow printing top {} matched Images and their matching scores".format(args.kimage))
-    for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):
+    for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=False):
         if k < args.kimage:
             print(key + " has matching score:: " + str(value))
             shutil.copy(os.path.join(head, key), res_dir)
