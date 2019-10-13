@@ -5,12 +5,37 @@ from HOGmain import HOG
 import os
 import glob
 import pymongo
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
 
 # import dbtask
 
-client = pymongo.MongoClient('localhost', 27017)
+client = pymongo.MongoClient('localhost', 27018)
 imagedb = client["imagedb"]
-models = imagedb["image_models"]
+mydb = imagedb["image_models"]
+
+def createKMeans(model, k):
+    feature_desc = None
+    for descriptor in imagedb.image_models.find():
+        if feature_desc is None:
+            feature_desc=pd.DataFrame(descriptor[model])
+        else:
+            feature_desc=[feature_desc, pd.DataFrame(descriptor[model])]
+            feature_desc = pd.concat(feature_desc, axis=0, sort=False)
+
+    feature_desc = feature_desc.values
+    ret = KMeans(n_clusters=k, max_iter=1000).fit(feature_desc)
+
+    for item in imagedb.image_models.find():
+        img=pd.DataFrame(item[model])
+        x=ret.predict(img)
+        bag = np.zeros((k,), dtype=int)
+        for z in x:
+            bag[z-1]+=1
+        imageID = item["_id"]
+        bag = bag.tolist()
+        imagedb.image_models.update_one({"_id" : imageID}, {"$set": {"bag_"+model : bag}})
 
 def calculate_fd(path):
     for image in glob.glob(os.path.join(path, "*.jpg")):
@@ -19,6 +44,7 @@ def calculate_fd(path):
 
         md = CM(image)
         lst = md.getFeatureDescriptors()
+        print(lst)
         dict["CM"] = lst
 
         md = LBP(image)
@@ -34,11 +60,16 @@ def calculate_fd(path):
         lst = lst.tolist()
         dict["HOG"] = lst
 
-        # dict["HOG"] = lst.tolist()
-        # print(type(lst.tolist()))
+        #dict["HOG"] = lst.tolist()
+        #print(type(lst.tolist()))
 
-        rec = mydb.image_models.insert_one(dict)
+        rec = imagedb.image_models.insert_one(dict)
 
 ## Main
-path = input("Enter Path: ")
-calculate_fd(path)
+#path = input("Enter Path: ")
+#calculate_fd(path)
+
+createKMeans("CM", 30)
+createKMeans("SIFT", 30)
+createKMeans("LBP", 30)
+
