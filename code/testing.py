@@ -1,3 +1,4 @@
+from NonNegativeMatrix import NMF
 from SingularValueDecomposition import SVD
 from ColorMoments import CM
 from SIFT import SIFT
@@ -8,7 +9,9 @@ from SIFT import SIFT
 
 sd = SVD()
 #sd.createKLatentSymantics("LBP",10)
-sd.mSimilarImage("../phase2/Hand_0001804.jpg", "LBP", 10, 5)
+#sd.mSimilarImage("../phase2/Hand_0001804.jpg", "LBP", 10, 5)
+nf=NMF()
+nf.createKLatentSymantics("LBP",20)
 
 """""
 
