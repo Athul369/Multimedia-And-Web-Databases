@@ -21,6 +21,7 @@ dict = {}
 list_subject_id = []
 dict_subjects = {}
 
+
 def subjectMeta():
     subjectID = imagedb.ImageMetadata.distinct("SubjectID")
     for id in subjectID:
@@ -38,6 +39,7 @@ def subjectMeta():
         dict_subjects["palmar_left"] = palmar_left
         dict_subjects["palmar_right"] = palmar_right
         rec = imagedb.subjects.insert_one(dict_subjects)
+
 
 def createKMeans(model, k):
     feature_desc = None
@@ -60,6 +62,7 @@ def createKMeans(model, k):
         imageID = item["_id"]
         bag = bag.tolist()
         imagedb.image_models.update_one({"_id": imageID}, {"$set": {"bag_"+model: bag}})
+
 
 def calculate_fd(path):
     for image in glob.glob(os.path.join(path, "*.jpg")):
@@ -89,12 +92,13 @@ def calculate_fd(path):
 
         rec = imagedb.image_models.insert_one(dict)
 
-## Main
+
+# Main
 path = input("Enter Path: ")
 calculate_fd(path)
 
-
 createKMeans("CM", 30)
+createKMeans("HOG", 30)
 createKMeans("SIFT", 30)
 createKMeans("LBP", 30)
-
+subjectMeta()
