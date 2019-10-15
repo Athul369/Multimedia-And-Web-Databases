@@ -1,3 +1,6 @@
 .idea/*
 code/__pycache__/*
 output/*
+output_old/*
+
+code/run_task.py

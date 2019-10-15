@@ -75,7 +75,7 @@ class SVD(object):
     def LabelLatentSemantic(self, label, model, k):
 
         model = "bag_" + model
-        if label ==  "left" or label == "right":
+        if label == "left" or label == "right":
             search = "Orientation"
         elif label == "dorsal" or label == "palmar":
             search = "aspectOfHand"
@@ -119,7 +119,7 @@ class SVD(object):
 
         return feature_desc_transformed
 
-    def mSimilarImage_Label(self, imgLoc,label,model, k, m):
+    def mSimilarImage_Label(self, imgLoc, label, model, k, m):
 
         if label == "left" or label == "right":
             search = "Orientation"
