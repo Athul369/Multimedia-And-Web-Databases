@@ -7,11 +7,12 @@ import pymongo
 from sklearn.cluster import KMeans
 from sklearn.decomposition import NMF
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', 27017)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 
-class NMF(object):
+
+class NM_F(object):
 
     def createKLatentSymantics(self, model, k):
 
@@ -24,19 +25,16 @@ class NMF(object):
         model = NMF(n_components=k, init='random', random_state=0)
         W = model.fit_transform(feature_desc)
         H = model.components_
-
-        # for i in range(k):
-        #     col = W[:, i]
-        #     arr = []
-        #     for k, val in enumerate(col):
-        #         arr.append((str(img_list[k]), val))
-        #     arr.sort(key=lambda x: x[1], reverse=True)
-        #     #print("Printing term-weight pair for latent Symantic {}({}):".format(i + 1, H[i]))
-        #     print(arr)
+        W=NM_F.rescaleToBasis(W)
+        for i in range(k):
+            col = W[:, i]
+            arr = []
+            for k, val in enumerate(col):
+                arr.append((str(img_list[k]), val))
+            arr.sort(key=lambda x: x[1], reverse=True)
+            print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
+            print(arr)
         print(W)
-
-
-
 
     def mSimilarImage(self, imgLoc, model, k, m):
 
@@ -46,9 +44,9 @@ class NMF(object):
         for descriptor in imagedb.image_models.find():
             feature_desc.append(descriptor[model])
             img_list.append(descriptor["_id"])
-        model = NMF(n_components=k, init='random', random_state=0)
-        W = model.fit_transform(feature_desc)
-        H = model.components_
+        nmf_ = NMF(n_components=k)
+        W = nmf_.fit_transform(feature_desc)
+        H = nmf_.components_
 
         head, tail = os.path.split(imgLoc)
 
@@ -61,23 +59,23 @@ class NMF(object):
             euc_dis = np.square(np.subtract(W[id], W[i]))
             match_score = np.sqrt(euc_dis.sum(0))
             rank_dict[img_list[i]] = match_score
-        res_dir = os.path.join('..', 'output', model[4:], 'match')
-        if os.path.exists(res_dir):
-            shutil.rmtree(res_dir)
-        os.mkdir(res_dir)
+        # res_dir = os.path.join('..', 'output', model[4:], 'match')
+        # if os.path.exists(res_dir):
+        #     shutil.rmtree(res_dir)
+        # os.mkdir(res_dir)
 
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
-                shutil.copy(os.path.join(head, key), res_dir)
+                # shutil.copy(os.path.join(head, key), res_dir)
                 count += 1
             else:
                 break
 
     def LabelLatentSemantic(self, label, model, k):
-        a=0
+        a = 0
         model = "bag_" + model
         if label == "left" or label == "right":
             search = "Orientation"
@@ -107,22 +105,24 @@ class NMF(object):
                 img_list.append(descriptor["_id"])
 
         print(len(img_list))
-        #svd1 = TruncatedSVD(k)
-        model = NMF(n_components=k, init='random', random_state=0)
-        #W = model.fit_transform(feature_desc)
-        H = model.components_
 
-        W=feature_desc_transformed = model.fit_transform(feature_desc)
-        #U, S, V = svd(feature_desc, full_matrices=False)
+        nmf_ = NMF(n_components=k, init='random', random_state=0)
 
-        # for i in range(k):
-        #     col = W[:, i]
-        #     arr = []
-        #     for k, val in enumerate(col):
-        #         arr.append((str(img_list[k]), val))
-        #     arr.sort(key=lambda x: x[1], reverse=True)
-        #     #print("Printing term-weight pair for latent Symantic {}({}):".format(i + 1, H[i]))
-        #     print(arr)
+
+        feature_desc_transformed = nmf_.fit_transform(feature_desc)
+        #H = nmf_.components_
+        W=NM_F.rescaleToBasis(feature_desc_transformed)
+
+
+
+        for i in range(k):
+            col = W[:, i]
+            arr = []
+            for k, val in enumerate(col):
+                arr.append((str(img_list[k]), val))
+            arr.sort(key=lambda x: x[1], reverse=True)
+            print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
+            print(arr)
 
         return feature_desc_transformed
 
@@ -145,8 +145,8 @@ class NMF(object):
             print("Please provide correct label")
             exit(1)
 
-        #svd = TruncatedSVD(k)
-        nmf= NMF(n_components=k, init='random', random_state=0)
+        # svd = TruncatedSVD(k)
+        nmf_ = NMF(n_components=k, init='random', random_state=0)
         model = "bag_" + model
         img_list = []
         imageslist_Meta = []
@@ -163,7 +163,7 @@ class NMF(object):
                 feature_desc.append(descriptor[model])
                 img_list.append(descriptor["_id"])
 
-        feature_desc_transformed = nmf.fit_transform(feature_desc)
+        feature_desc_transformed = nmf_.fit_transform(feature_desc)
 
         head, tail = os.path.split(imgLoc)
 
@@ -177,20 +177,19 @@ class NMF(object):
             match_score = np.sqrt(euc_dis.sum(0))
             rank_dict[img_list[i]] = match_score
 
-        res_dir = os.path.join('..', 'output', model[4:], 'match')
-        if os.path.exists(res_dir):
-            shutil.rmtree(res_dir)
-        os.mkdir(res_dir)
+        # res_dir = os.path.join('..', 'output', model[4:], 'match')
+        # if os.path.exists(res_dir):
+        #     shutil.rmtree(res_dir)
+        # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
-                shutil.copy(os.path.join(head, key), res_dir)
+                #shutil.copy(os.path.join(head, key), res_dir)
                 count += 1
             else:
                 break
-
 
     def ImageClassfication(self, imgLoc, model, k):
         result = {}
@@ -241,10 +240,10 @@ class NMF(object):
                     frames.append(descriptor[model])
                     img_list.append(descriptor["_id"])
 
-            #svd = TruncatedSVD(k)
-            nmf=NMF(n_components=k, init='random', random_state=0)
-            feature_desc_transformed = nmf.fit_transform(frames)
-            query_desc_transformed = nmf.transform(query_desc)
+            # svd = TruncatedSVD(k)
+            nmf_ = NMF(n_components=k, init='random', random_state=0)
+            feature_desc_transformed = nmf_.fit_transform(frames)
+            query_desc_transformed = nmf_.transform(query_desc)
             mean_transformed = np.true_divide(feature_desc_transformed.sum(0), len(img_list))
 
             all_dist = []
@@ -286,4 +285,9 @@ class NMF(object):
         else:
             print("male")
 
+    def rescaleToBasis(arr):
+        a = 0
+        col_magnitude=np.sqrt(np.sum(np.square(arr), axis=0))
+        rescaled_array=np.divide(arr,col_magnitude)
+        return rescaled_array
 
