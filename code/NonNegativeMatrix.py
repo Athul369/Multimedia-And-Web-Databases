@@ -44,6 +44,12 @@ class NM_F(object):
         visualizeArr = pd.DataFrame(visualizeArr)
         vz.visualize_data_ls(visualizeArr, 'NMF', model_name)
         print(W)
+        
+        #####Feature discriptor and latent space dot product . below "feature_latent_product" functions returns a array
+
+        feature_latentsemantics_visualizer=NM_F.feature_latent_product(feature_desc,H,img_list)
+        print(feature_latentsemantics_visualizer)
+        
 
     def mSimilarImage(self, imgLoc, model, k, m):
         model_name = model
@@ -66,9 +72,12 @@ class NM_F(object):
         for i, row in enumerate(W):
             if (i == id):
                 continue
-            euc_dis = np.square(np.subtract(W[id], W[i]))
-            match_score = np.sqrt(euc_dis.sum(0))
-            rank_dict[img_list[i]] = match_score
+#             euc_dis = np.square(np.subtract(W[id], W[i]))
+#             match_score = np.sqrt(euc_dis.sum(0))
+#             rank_dict[img_list[i]] = match_score
+            match_score=NM_F.nvsc(W[id], W[i])
+            print(match_score)
+            rank_dict[img_list[i]]=match_score
         # res_dir = os.path.join('..', 'output', model[4:], 'match')
         # if os.path.exists(res_dir):
         #     shutil.rmtree(res_dir)
@@ -186,8 +195,11 @@ class NM_F(object):
         for i, row in enumerate(feature_desc_transformed):
             if (i == id):
                 continue
-            euc_dis = np.square(np.subtract(feature_desc_transformed[id], feature_desc_transformed[i]))
-            match_score = np.sqrt(euc_dis.sum(0))
+#             euc_dis = np.square(np.subtract(feature_desc_transformed[id], feature_desc_transformed[i]))
+#             match_score = np.sqrt(euc_dis.sum(0))
+#             rank_dict[img_list[i]] = match_score
+            match_score = NM_F.nvsc(feature_desc_transformed[id], feature_desc_transformed[i])
+            print(match_score)
             rank_dict[img_list[i]] = match_score
 
         # res_dir = os.path.join('..', 'output', model[4:], 'match')
@@ -303,4 +315,35 @@ class NM_F(object):
         col_magnitude=np.sqrt(np.sum(np.square(arr), axis=0))
         rescaled_array=np.divide(arr,col_magnitude)
         return rescaled_array
+    
+    ################### distance measurement function
+    def nvsc(X, Y):
+        sumMin = 0
+        sumMax = 0
+        for i in range(len(X)):
+            a = 0
+            sumMin = sumMin + min(X[i], Y[i])
+            sumMax = sumMax + max(X[i], Y[i])
+        chi = sumMin / sumMax
+        distance = 1 - chi * chi
+        return distance
+    
+####################feature- latentsemantics  visualizer function
+
+    def feature_latent_product(featMat,latMat,image_list):
+        a=0
+        visualizerDict=[]
+        for i in range(len(latMat)):
+            maxDict={}
+
+            for j in range(len(featMat)):
+                maxDict[image_list[j]]=np.dot(latMat[i],featMat[j])
+
+            maximum = max(maxDict, key=maxDict.get)
+            visualizerDict.append((maximum,maxDict[maximum]))
+
+        return visualizerDict
+
+
+
 
