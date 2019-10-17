@@ -4,10 +4,11 @@ import shutil
 import pandas as pd
 import numpy as np
 import pymongo
+import Visualizer as vz
 from sklearn.cluster import KMeans
 from sklearn.decomposition import NMF
 
-client = pymongo.MongoClient('localhost', 27017)
+client = pymongo.MongoClient('localhost', 27018)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 
@@ -66,6 +67,9 @@ class NM_F(object):
 
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
+        # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
+        head, tail = os.path.split(imgLoc)
+        vz.visualize_matching_images(tail, rank_dict, m, 'NMF', model)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))

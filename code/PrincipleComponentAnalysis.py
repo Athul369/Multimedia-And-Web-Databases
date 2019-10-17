@@ -6,11 +6,13 @@ import os
 from numpy import linalg
 import math
 import shutil
+import Visualizer as vz
 
-client = pymongo.MongoClient('localhost', 27017)
+client = pymongo.MongoClient('localhost', 27018)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
-meta =  imagedb["ImageMetadata"]
+meta = imagedb["ImageMetadata"]
+
 
 class PrincipleComponentAnalysis(object):
 
@@ -23,7 +25,7 @@ class PrincipleComponentAnalysis(object):
             frames.append(descriptor[model])
             img_list.append(descriptor["_id"])
 
-        frames =pd.DataFrame(frames)
+        frames = pd.DataFrame(frames)
         print(frames.shape)
         mean_vec = np.mean(frames, axis=0)
         cov_mat = np.cov(frames.T)
@@ -87,19 +89,21 @@ class PrincipleComponentAnalysis(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
+        # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
+        head, tail = os.path.split(imgLoc)
+        vz.visualize_matching_images(tail, rank_dict, m, 'PCA', model)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
                 # shutil.copy(os.path.join(head, key), res_dir)
                 count += 1
             else:
-
                 break
 
     def LabelLatentSemantic(self, label, model, k):
 
         model = "bag_" + model
-        if label ==  "left" or label == "right":
+        if label == "left" or label == "right":
             search = "Orientation"
         elif label == "dorsal" or label == "palmar":
             search = "aspectOfHand"
@@ -125,12 +129,10 @@ class PrincipleComponentAnalysis(object):
                 frames.append(descriptor[model])
                 img_list.append(descriptor["_id"])
 
-
         frames = pd.DataFrame(frames)
 
         mean_vec = np.mean(frames, axis=0)
         cov_mat = np.cov(frames.T)
-
 
         # Compute the eigen values and vectors using numpy
         eig_vals, eig_vecs = np.linalg.eig(cov_mat)
@@ -159,7 +161,7 @@ class PrincipleComponentAnalysis(object):
             print("Printing term-weight pair for latent Symantic L{}:".format(i + 1))
             print(arr)
 
-    def mSimilarImage_Label(self, imgLoc,label,model, k, m):
+    def mSimilarImage_Label(self, imgLoc, label, model, k, m):
 
         if label == "left" or label == "right":
             search = "Orientation"
@@ -234,7 +236,7 @@ class PrincipleComponentAnalysis(object):
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
 
-        labels = [ "dorsal", "palmar", "left", "right", "Access", "NoAccess", "male", "female"]
+        labels = ["dorsal", "palmar", "left", "right", "Access", "NoAccess", "male", "female"]
 
         for label in labels:
             # print(label)
@@ -285,7 +287,6 @@ class PrincipleComponentAnalysis(object):
             query_desc_transformed = pca_Obj.transform(query_desc)
 
             all_dist = []
-
 
             # for D_des in (feature_desc_transformed):
             distance = np.linalg.norm(mean_transformed - query_desc_transformed)

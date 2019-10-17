@@ -1,15 +1,17 @@
 from sklearn.decomposition import LatentDirichletAllocation
 from scipy.linalg import svd
 import numpy as np
+import pandas as pd
 import pymongo
 import os
 import shutil
-
+import Visualizer as vz
 from sklearn.metrics.pairwise import cosine_similarity
 
-client = pymongo.MongoClient('localhost', 27017)
+client = pymongo.MongoClient('localhost', 27018)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
+meta = imagedb["ImageMetadata"]
 
 
 class LDA(object):
@@ -30,14 +32,20 @@ class LDA(object):
         # for f in feature_desc_transformed:
         #     print(sum(f))
 
+        visualizeArr = []
+
         for i in range(k):
             col = feature_desc_transformed[:, i]
             arr = []
             for k, val in enumerate(col):
                 arr.append((str(img_list[k]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
+            """ Only take the top 5 data objects to report for each latent semantic """
+            visualizeArr.append(arr[:5])
             print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
             print(arr)
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_data_ls(visualizeArr, 'LDA', model)
 
     def kl(self, p, q):
         """Kullback-Leibler divergence D(P || Q) for discrete distributions
@@ -81,6 +89,9 @@ class LDA(object):
         #     shutil.rmtree(res_dir)
         # os.mkdir(res_dir)
         count = 0
+        # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
+        head, tail = os.path.split(imgLoc)
+        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model)
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:

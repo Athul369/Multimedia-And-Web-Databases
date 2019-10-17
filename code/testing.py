@@ -3,21 +3,31 @@ from ColorMoments import CM
 from SIFT import SIFT
 from SingularValueDecomposition import SVD
 from LatentDirichletAllocation import LDA
+from NonNegativeMatrix import NM_F
 
 #md = SIFT("../Hands/Hand_0000002.jpg")
 
 #md.createKMeans("../output/SIFT",30)
 
 pca1 = PrincipleComponentAnalysis()
+lda1 = LDA()
+svd1 = SVD()
+nmf1 = NM_F()
 
 #task1
-#pca1.createPCA_KLatentSemantics("SIFT", 20)
+pca1.createPCA_KLatentSemantics("SIFT", 20)
+lda1.createKLatentSymantics("SIFT", 20)
+svd1.createKLatentSymantics("SIFT", 20)
+nmf1.createKLatentSymantics("SIFT", 20)
 
 #task2
-# pca1.mSimilarImage("./phase2_Images/Hand_0000021.jpg", "SIFT", 20, 5)
+pca1.mSimilarImage("./phase2_Images/Hand_0000021.jpg", "SIFT", 20, 13)
+lda1.mSimilarImage("./phase2_Images/Hand_0000021.jpg", "SIFT", 20, 13)
+svd1.mSimilarImage("./phase2_Images/Hand_0000021.jpg", "SIFT", 20, 13)
+nmf1.mSimilarImage("./phase2_Images/Hand_0000021.jpg", "SIFT", 20, 13)
 
 #task3
-# pca1.LabelLatentSemantic("left","SIFT",20)
+# pca1.LabelLatentSemantic("left", "SIFT", 20)
 
 #task4
 # pca1.mSimilarImage_Label("./phase2_Images/Hand_0000021.jpg", "Access", "SIFT", 20, 5)
