@@ -18,6 +18,7 @@ class PrincipleComponentAnalysis(object):
 
     def createPCA_KLatentSemantics(self, model, k):
         #svd1 = TruncatedSVD(k)
+        model_name = model
         model = "bag_" + model
         frames = []
         img_list = []
@@ -49,17 +50,24 @@ class PrincipleComponentAnalysis(object):
                 frame = [frame, feature]
                 frame = pd.concat(frame, axis=1, sort=False)
 
+        visualizeArr = []
+
         for i in range(k):
             col = frame.iloc[:, i]
             arr = []
             for k, val in enumerate(col):
                 arr.append((k, val))
             arr.sort(key=lambda x: x[1], reverse=True)
-            print("Printing term-weight pair for latent Symantic L{}:".format(i + 1))
+            """ Only take the top 5 data objects to report for each latent semantic """
+            visualizeArr.append(arr[:5])
+            print("Printing term-weight pair for latent Semantic L{}:".format(i + 1))
             print(arr)
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_feature_ls(visualizeArr, 'PCA', model_name)
 
 
     def mSimilarImage(self, imgLoc, model, k, m):
+        model_name = model
         img_list = []
         pca = PCA(k)
         model = "bag_" + model
@@ -91,7 +99,7 @@ class PrincipleComponentAnalysis(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'PCA', model)
+        vz.visualize_matching_images(tail, rank_dict, m, 'PCA', model_name)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))

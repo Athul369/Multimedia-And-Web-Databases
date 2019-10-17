@@ -8,6 +8,9 @@ from PIL import ImageTk
 test_dir = r"C:\Users\tyler\Desktop\phase2test\cse515_dataset_2\Dataset2"
 img_dir = r"C:\Users\tyler\Desktop\phase2"
 thumbnail_size = (160, 120)
+ls_width = 1125
+data_ls_height = 780
+ftr_ls_height = 225
 
 
 def create_thumbnail(img_id):
@@ -114,7 +117,7 @@ def visualize_data_ls(data_ls, technique, fm):
     window = tk.Tk()
     window.title("Visualization of Data-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm))
 
-    frame = HSF(window)
+    frame = HSF(window, ls_width, data_ls_height)
 
     v_row = 0
     img_col = 0
@@ -167,5 +170,46 @@ def visualize_data_ls(data_ls, technique, fm):
 def visualize_feature_ls(feature_ls, technique, fm):
     """ Function to visualize the Feature to Latent Semantics Matrix.
         Note k value is not needed here as the data_ls is a list of dataFrames of length k. """
+    # Create a window
+    window = tk.Tk()
+    window.title("Visualization of Feature-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm))
 
-    print('Visualizer for Feature-Latent Semantics called')
+    frame = HSF(window, ls_width, ftr_ls_height)
+
+    v_row = 0
+    ftr_col = 0
+    lbl_col = 1
+    ls_count = 1
+    """ ls_list is a list of tuples of (images, scores) """
+    for ls_list in feature_ls.values:
+        ls_label = tk.Label(frame.scrollable_frame, text='Latent Semantic %s' % ls_count)
+        ls_label.grid(row=v_row, column=ftr_col, columnspan=2)
+        """ After displaying the latent semantic label up the current row value. """
+        v_row += 1
+        row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+        feature_id = tk.Label(row, text="Feature Identifier", width=15)
+        score_id = tk.Label(row, text="Feature Score", width=15)
+        row.grid(row=v_row, column=ftr_col, columnspan=2)
+        feature_id.grid(row=v_row, column=ftr_col)
+        score_id.grid(row=v_row, column=lbl_col)
+        """ After adding identifier labels up the current row value. """
+        v_row += 1
+        for feature, score in ls_list:
+            data_row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+            feature_label = tk.Label(data_row, text=str(feature), width=14)
+            score_label = tk.Label(data_row, text=str(score), width=16)
+            data_row.grid(row=v_row, column=ftr_col, columnspan=2)
+            feature_label.grid(row=v_row, column=ftr_col)
+            score_label.grid(row=v_row, column=lbl_col)
+            """ After adding the image thumbnail and score up the current row value. """
+            v_row += 1
+
+        """ After going through each list reset the row back to 0, and up the Latent Semantic count by 1
+            Also increase the image column and label column each by 2. """
+        v_row = 0
+        ls_count += 1
+        ftr_col += 2
+        lbl_col += 2
+
+    frame.pack(expand=True, fill='both')
+    window.mainloop()

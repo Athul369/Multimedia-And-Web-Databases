@@ -3,11 +3,11 @@ from tkinter import ttk
 
 
 class HSF(ttk.Frame):
-    def __init__(self, container, *args, **kwargs):
-        super().__init__(container, *args, **kwargs)
-        """ The canvas width and height values here were set so the window has an initial size.
+    def __init__(self, container, width, height):
+        super().__init__(container)
+        """ The canvas width and height values are set so the window has an initial size.
             The window however can still be expanded beyond this initial size. """
-        canvas = tk.Canvas(self, width=1125, height=780)
+        canvas = tk.Canvas(self, width=width, height=height)
         scrollbar = ttk.Scrollbar(self, orient="horizontal", command=canvas.xview)
         self.scrollable_frame = ttk.Frame(canvas)
 

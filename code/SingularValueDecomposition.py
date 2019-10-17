@@ -17,6 +17,7 @@ class SVD(object):
 
     def createKLatentSymantics(self, model, k):
         #svd1 = TruncatedSVD(k)
+        model_name = model
         model = "bag_" + model
         feature_desc = []
         img_list = []
@@ -37,12 +38,13 @@ class SVD(object):
             arr.sort(key=lambda x: x[1], reverse=True)
             """ Only take the top 5 data objects to report for each latent semantic """
             visualizeArr.append(arr[:5])
-            print("Printing term-weight pair for latent Symantic {}({}):".format(i + 1, S[i]))
+            print("Printing term-weight pair for latent Semantic {}({}):".format(i + 1, S[i]))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, 'SVD', model)
+        vz.visualize_data_ls(visualizeArr, 'SVD', model_name)
 
     def mSimilarImage(self, imgLoc, model, k, m):
+        model_name = model
         img_list = []
         svd = TruncatedSVD(k)
         model = "bag_" + model
@@ -74,7 +76,7 @@ class SVD(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'SVD', model)
+        vz.visualize_matching_images(tail, rank_dict, m, 'SVD', model_name)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))

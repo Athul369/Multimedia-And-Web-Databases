@@ -18,6 +18,7 @@ class LDA(object):
 
     def createKLatentSymantics(self, model, k):
         lda_vb = LatentDirichletAllocation(k, max_iter=25)
+        model_name = model
         model = "bag_" + model
         feature_desc = []
         img_list = []
@@ -42,10 +43,10 @@ class LDA(object):
             arr.sort(key=lambda x: x[1], reverse=True)
             """ Only take the top 5 data objects to report for each latent semantic """
             visualizeArr.append(arr[:5])
-            print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
+            print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, 'LDA', model)
+        vz.visualize_data_ls(visualizeArr, 'LDA', model_name)
 
     def kl(self, p, q):
         """Kullback-Leibler divergence D(P || Q) for discrete distributions
@@ -60,6 +61,7 @@ class LDA(object):
         return np.sum(np.where(p != 0, p * np.log(p / q), 0))
 
     def mSimilarImage(self, imgLoc, model, k, m):
+        model_name = model
         lda = LatentDirichletAllocation(k, max_iter=25)
         model = "bag_" + model
         feature_desc = []
@@ -91,7 +93,7 @@ class LDA(object):
         count = 0
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model)
+        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model_name)
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:

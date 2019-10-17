@@ -17,6 +17,7 @@ class NM_F(object):
 
     def createKLatentSymantics(self, model, k):
 
+        model_name = model
         model = "bag_" + model
         feature_desc = []
         img_list = []
@@ -27,17 +28,25 @@ class NM_F(object):
         W = model.fit_transform(feature_desc)
         H = model.components_
         W=NM_F.rescaleToBasis(W)
+
+        visualizeArr = []
+
         for i in range(k):
             col = W[:, i]
             arr = []
             for k, val in enumerate(col):
                 arr.append((str(img_list[k]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
-            print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
+            """ Only take the top 5 data objects to report for each latent semantic """
+            visualizeArr.append(arr[:5])
+            print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_data_ls(visualizeArr, 'NMF', model_name)
         print(W)
 
     def mSimilarImage(self, imgLoc, model, k, m):
+        model_name = model
 
         model = "bag_" + model
         feature_desc = []
@@ -69,7 +78,7 @@ class NM_F(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'NMF', model)
+        vz.visualize_matching_images(tail, rank_dict, m, 'NMF', model_name)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
