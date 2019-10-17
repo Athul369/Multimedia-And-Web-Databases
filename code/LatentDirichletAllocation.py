@@ -46,7 +46,7 @@ class LDA(object):
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, 'LDA', model_name)
+        vz.visualize_data_ls(visualizeArr, 'LDA', model_name, '')
 
     def kl(self, p, q):
         """Kullback-Leibler divergence D(P || Q) for discrete distributions
@@ -93,7 +93,7 @@ class LDA(object):
         count = 0
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model_name)
+        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model_name, '')
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
@@ -105,9 +105,9 @@ class LDA(object):
 
 
     def LabelLatentSemantic(self, label, model, k):
-
+        model_name = model
         model = "bag_" + model
-        if label ==  "left" or label == "right":
+        if label == "left" or label == "right":
             search = "Orientation"
         elif label == "dorsal" or label == "palmar":
             search = "aspectOfHand"
@@ -137,10 +137,12 @@ class LDA(object):
         print(len(img_list))
         lda = LatentDirichletAllocation(k, max_iter=25)
         feature_desc_transformed = lda.fit_transform(feature_desc)
+        # TODO: Determine how this is to be visualized.
         return feature_desc_transformed
 
-    def mSimilarImage_Label(self, imgLoc,label,model, k, m):
-
+    def mSimilarImage_Label(self, imgLoc, label, model, k, m):
+        model_name = model
+        label_str = label
         if label == "left" or label == "right":
             search = "Orientation"
         elif label == "dorsal" or label == "palmar":
@@ -148,9 +150,11 @@ class LDA(object):
         elif label == "Access" or label == "NoAccess":
             search = "accessories"
             if label == "Access":
-                label = 1
+                label = '1'
+                label_str = 'With Accessories'
             else:
-                label = 0
+                label = '0'
+                label_str = 'Without Accessories'
 
         elif label == "male" or label == "female":
             search = "gender"
@@ -195,6 +199,7 @@ class LDA(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
+        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))

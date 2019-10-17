@@ -41,7 +41,7 @@ class SVD(object):
             print("Printing term-weight pair for latent Semantic {}({}):".format(i + 1, S[i]))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, 'SVD', model_name)
+        vz.visualize_data_ls(visualizeArr, 'SVD', model_name, '')
 
     def mSimilarImage(self, imgLoc, model, k, m):
         model_name = model
@@ -76,7 +76,7 @@ class SVD(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'SVD', model_name)
+        vz.visualize_matching_images(tail, rank_dict, m, 'SVD', model_name, '')
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -87,7 +87,7 @@ class SVD(object):
 
 
     def LabelLatentSemantic(self, label, model, k):
-
+        model_name = model
         model = "bag_" + model
         if label == "left" or label == "right":
             search = "Orientation"
@@ -122,19 +122,26 @@ class SVD(object):
         feature_desc_transformed = svd1.fit_transform(feature_desc)
         U, S, V = svd(feature_desc, full_matrices=False)
 
+        visualizeArr = []
+
         for i in range(k):
             col = U[:, i]
             arr = []
             for k, val in enumerate(col):
                 arr.append((str(img_list[k]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
-            print("Printing term-weight pair for latent Symantic {}({}):".format(i + 1, S[i]))
+            """ Only take the top 5 data objects to report for each latent semantic """
+            visualizeArr.append(arr[:5])
+            print("Printing term-weight pair for latent Semantic {}({}):".format(i + 1, S[i]))
             print(arr)
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_data_ls(visualizeArr, 'SVD', model_name, label)
 
         return feature_desc_transformed
 
     def mSimilarImage_Label(self, imgLoc, label, model, k, m):
-
+        model_name = model
+        label_str = label
         if label == "left" or label == "right":
             search = "Orientation"
         elif label == "dorsal" or label == "palmar":
@@ -142,9 +149,11 @@ class SVD(object):
         elif label == "Access" or label == "NoAccess":
             search = "accessories"
             if label == "Access":
-                label = 1
+                label = '1'
+                label_str = 'With Accessories'
             else:
-                label = 0
+                label = '0'
+                label_str = 'Without Accessories'
 
         elif label == "male" or label == "female":
             search = "gender"
@@ -183,16 +192,17 @@ class SVD(object):
             match_score = np.sqrt(euc_dis.sum(0))
             rank_dict[img_list[i]] = match_score
 
-        res_dir = os.path.join('..', 'output', model[4:], 'match')
-        if os.path.exists(res_dir):
-            shutil.rmtree(res_dir)
-        os.mkdir(res_dir)
+        # res_dir = os.path.join('..', 'output', model[4:], 'match')
+        # if os.path.exists(res_dir):
+        #     shutil.rmtree(res_dir)
+        # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
+        vz.visualize_matching_images(tail, rank_dict, m, 'SVD', model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
-                shutil.copy(os.path.join(head, key), res_dir)
+                # shutil.copy(os.path.join(head, key), res_dir)
                 count += 1
             else:
                 break

@@ -42,7 +42,7 @@ class NM_F(object):
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, 'NMF', model_name)
+        vz.visualize_data_ls(visualizeArr, 'NMF', model_name, '')
         print(W)
         
         #####Feature discriptor and latent space dot product . below "feature_latent_product" functions returns a array
@@ -87,7 +87,7 @@ class NM_F(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'NMF', model_name)
+        vz.visualize_matching_images(tail, rank_dict, m, 'NMF', model_name, '')
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -97,6 +97,7 @@ class NM_F(object):
                 break
 
     def LabelLatentSemantic(self, label, model, k):
+        model_name = model
         a = 0
         model = "bag_" + model
         if label == "left" or label == "right":
@@ -135,7 +136,7 @@ class NM_F(object):
         #H = nmf_.components_
         W=NM_F.rescaleToBasis(feature_desc_transformed)
 
-
+        visualizeArr = []
 
         for i in range(k):
             col = W[:, i]
@@ -143,13 +144,19 @@ class NM_F(object):
             for k, val in enumerate(col):
                 arr.append((str(img_list[k]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
-            print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
+            """ Only take the top 5 data objects to report for each latent semantic """
+            visualizeArr.append(arr[:5])
+            print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
+
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_data_ls(visualizeArr, 'NMF', model_name, label)
 
         return feature_desc_transformed
 
     def mSimilarImage_Label(self, imgLoc, label, model, k, m):
-
+        model_name = model
+        label_str = label
         if label == "left" or label == "right":
             search = "Orientation"
         elif label == "dorsal" or label == "palmar":
@@ -157,9 +164,11 @@ class NM_F(object):
         elif label == "Access" or label == "NoAccess":
             search = "accessories"
             if label == "Access":
-                label = 1
+                label = '1'
+                label_str = 'With Accessories'
             else:
-                label = 0
+                label = '0'
+                label_str = 'Without Accessories'
 
         elif label == "male" or label == "female":
             search = "gender"
@@ -208,6 +217,7 @@ class NM_F(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
+        vz.visualize_matching_images(tail, rank_dict, m, 'NMF', model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))

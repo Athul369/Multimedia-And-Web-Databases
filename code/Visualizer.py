@@ -5,8 +5,8 @@ from HorizontalScrollableFrame import HSF
 from PIL import Image
 from PIL import ImageTk
 
-test_dir = r"C:\Users\tyler\Desktop\phase2test\cse515_dataset_2\Dataset2"
-img_dir = r"C:\Users\tyler\Desktop\phase2"
+test_dir = r"C:\Users\tyler\Desktop\phase2"
+img_dir = r"C:\Users\tyler\Desktop\phase2test\cse515_dataset_2\Dataset2"
 thumbnail_size = (160, 120)
 ls_width = 1125
 data_ls_height = 780
@@ -22,12 +22,15 @@ def create_thumbnail(img_id):
     return tn_img
 
 
-def visualize_matching_images(q_img, images_data, m, technique, fm):
+def visualize_matching_images(q_img, images_data, m, technique, fm, label):
     photos = []
     imgdata_to_visualize = []
     # Create a window
     window = tk.Tk()
-    window.title("Visualization of Similar Images for %s with %s Feature Descriptors" % (technique, fm))
+    title_txt = "Visualization of Similar Images for %s with %s Feature Descriptors" % (technique, fm)
+    if label != '':
+        title_txt = title_txt + ' and label: ' + label
+    window.title(title_txt)
     q_header = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
     q_lbl = tk.Label(q_header, text='Query Image')
     q_name = tk.Label(q_header, text='Query Image ID')
@@ -108,14 +111,17 @@ def visualize_matching_images(q_img, images_data, m, technique, fm):
     window.mainloop()
 
 
-def visualize_data_ls(data_ls, technique, fm):
+def visualize_data_ls(data_ls, technique, fm, label):
     """ Function to visualize the Data to Latent Semantics Matrix.
         Note k value is not needed here as the data_ls is a list of dataFrames of length k. """
     photos = []
 
     # Create a window
     window = tk.Tk()
-    window.title("Visualization of Data-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm))
+    title_txt = "Visualization of Data-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm)
+    if label != '':
+        title_txt = title_txt + ' and label: ' + label
+    window.title(title_txt)
 
     frame = HSF(window, ls_width, data_ls_height)
 
@@ -167,12 +173,15 @@ def visualize_data_ls(data_ls, technique, fm):
     window.mainloop()
 
 
-def visualize_feature_ls(feature_ls, technique, fm):
+def visualize_feature_ls(feature_ls, technique, fm, label):
     """ Function to visualize the Feature to Latent Semantics Matrix.
         Note k value is not needed here as the data_ls is a list of dataFrames of length k. """
     # Create a window
     window = tk.Tk()
-    window.title("Visualization of Feature-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm))
+    title_txt = "Visualization of Feature-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm)
+    if label != '':
+        title_txt = title_txt + ' and label: ' + label
+    window.title(title_txt)
 
     frame = HSF(window, ls_width, ftr_ls_height)
 
