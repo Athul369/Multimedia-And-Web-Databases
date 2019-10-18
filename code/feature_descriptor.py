@@ -1,4 +1,5 @@
 from LocalBinaryPatterns import LBP
+# from LocalBinaryPatternsModified import LBP
 from ColorMoments import CM
 from SIFT import SIFT
 from HOGmain import HOG
@@ -99,11 +100,11 @@ def calculate_fd(path):
 # Main
 # imagedb.image_models.drop()
 # imagedb.subjects.drop()
-# path = input("Enter Path: ")
-# calculate_fd(path)
+path = input("Enter Path: ")
+calculate_fd(path)
 #
-createKMeans("CM", 25)
-# createKMeans("HOG", 30)
-# createKMeans("SIFT", 30)
-# createKMeans("LBP", 30)
+createKMeans("CM", 30)
+createKMeans("HOG", 30)
+createKMeans("SIFT", 30)
+createKMeans("LBP", 30)
 # subjectMeta()

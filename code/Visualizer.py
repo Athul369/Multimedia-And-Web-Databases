@@ -3,6 +3,7 @@ import cv2
 import os
 import pymongo
 from HorizontalScrollableFrame import HSF
+from VerticalScrollableFrame import VSF
 import Constants as const
 from PIL import Image
 from PIL import ImageTk
@@ -11,6 +12,7 @@ from PIL import ImageTk
 img_dir = const.DB_IMG_PATH
 thumbnail_size = (160, 120)
 ls_width = 1125
+subj_width = 1300
 data_ls_height = 780
 ftr_ls_height = 225
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
@@ -295,10 +297,11 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
     print('Visualization for Similar Subjects called')
     # Create a window
     window = tk.Tk()
+    frame = VSF(window, subj_width, data_ls_height)
     title_txt = "Visualization of Similar Subjects using LDA with %s Feature Descriptors and k of %s" % (fm, str(k))
     window.title(title_txt)
-    q_holder = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
-    q_lbl = tk.Label(q_holder, text='Query Subject %s' %q_subj)
+    q_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+    q_lbl = tk.Label(q_holder, text='Query Subject %s' % q_subj)
     q_name = tk.Label(q_holder, text='Query Image IDs')
     """ rowspan set to 5 as that is the max count of rows for images 
         and data that will be stored for at most 4 images per subject. """
@@ -338,7 +341,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
     for subject, score in sorted(subject_dict.items(), key=lambda item: item[1]):
         """ Only show top 3 similar subjects """
         if s_count < 3:
-            subj_holder = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+            subj_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
             subject_lbl = tk.Label(subj_holder, text='Similar Subject #%s: %s' % (subject_num, subject))
             subject_score = tk.Label(subj_holder, text='Score: %s' % str(score))
             subj_holder.grid(row=subj_row, column=s_img_col, columnspan=2, rowspan=5)
@@ -375,4 +378,5 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
             """ Reset the row to 0 after each subject finishes."""
             subj_row = 0
 
+    frame.pack(expand=True, fill='both')
     window.mainloop()
