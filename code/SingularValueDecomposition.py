@@ -275,31 +275,34 @@ class SVD(object):
 
         classification = {}
 
-        flag = False
-        if result["dorsal"] > result["palmar"]:
-            flag = True
-            classification['Aspect of Hand:'] = 'palmar'
-            print("palmar")
+        if result["dorsal_left"] > result["dorsal_right"]:
+            semi_final1 = result["dorsal_right"]
+            conclusion1 = "dorsal_right"
         else:
-            classification['Aspect of Hand:'] = 'dorsal'
-            print("dorsal")
+            semi_final1 = result["dorsal_left"]
+            conclusion1 = "dorsal_left"
 
-        if result["left"] > result["right"]:
-            if flag:
-                classification['Orientation:'] = 'Left'
-                print("Left")
-            else:
-                classification['Orientation:'] = 'Right'
-                print("Right")
+        if result["palmar_left"] > result["palmar_right"]:
+            semi_final2 = result["palmar_right"]
+            conclusion2 = "palmar_right"
         else:
-            if flag:
-                classification['Orientation:'] = 'Right'
-                print("Right")
-            else:
-                classification['Orientation:'] = 'Left'
-                print("Left")
+            semi_final2 = result["palmar_left"]
+            conclusion2 = "palmar_left"
 
-        if result['1'] > result['0']:
+        if semi_final1 > semi_final2:
+            res = conclusion2.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+        else:
+            res = conclusion1.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+
+        if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -312,4 +315,5 @@ class SVD(object):
         else:
             classification['Gender:'] = 'Male'
             print("male")
+
         vz.visualize_classified_image(tail, classification, 'SVD', model_name)

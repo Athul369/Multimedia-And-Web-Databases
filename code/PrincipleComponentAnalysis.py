@@ -253,91 +253,92 @@ class PrincipleComponentAnalysis(object):
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
 
-        labels = ["dorsal", "palmar", "left", "right", "Access", "NoAccess", "male", "female"]
+        Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
-        for label in labels:
-            # print(label)
+        for label in Labels:
+            label_Desc = []
+            desc_img_list = []
+            imageslist_Meta = []
 
-            if label == "left" or label == "right":
-                search = "Orientation"
-            elif label == "dorsal" or label == "palmar":
-                search = "aspectOfHand"
+            if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
+                for subject in imagedb.subjects.find():
+                    for img in subject[label]:
+                        label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
+                        desc_img_list.append(img)
+
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = '1'
+                    label = 1
                 else:
-                    label = '0'
+                    label = 0
+
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
+                        imageslist_Meta.append(descriptor["imageName"])
+
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
+
             elif label == "male" or label == "female":
                 search = "gender"
-            else:
-                print("Please provide correct label")
-                exit(1)
-
-            img_list = []
-            imageslist_Meta = []
-            frames = []
-
-            for descriptor in imagedb.ImageMetadata.find():
-                if search == "Orientation" and descriptor["aspectOfHand"] == "palmar":
-                    if descriptor[search] != label:
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
                         imageslist_Meta.append(descriptor["imageName"])
-                    continue
-                if descriptor[search] == label:
-                    imageslist_Meta.append(descriptor["imageName"])
 
-            # print(len(imageslist_Meta))
-
-            for descriptor in imagedb.image_models.find():
-                if descriptor["_id"] in imageslist_Meta:
-                    # if descriptor["_id"] == tail:
-                    #     continue
-                    frames.append(descriptor[model])
-                    img_list.append(descriptor["_id"])
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
 
             pca = PCA(k)
-            pca_Obj = pca.fit(frames)
-            feature_desc_transformed = pca_Obj.transform(frames)
+            lda_Obj = pca.fit(label_Desc)
+            label_desc_transformed = lda_Obj.transform(label_Desc)
+            query_desc_transformed = lda_Obj.transform(query_desc)
 
-            mean_transformed = np.true_divide(feature_desc_transformed.sum(0),len(img_list))
-            # print(mean_transformed)
-            query_desc_transformed = pca_Obj.transform(query_desc)
+            dist = []
 
-            all_dist = []
+            for i, db_desc in enumerate(label_desc_transformed):
+                if desc_img_list[i] == tail:
+                    continue
+                euc_dis = np.square(np.subtract(db_desc, query_desc_transformed))
+                match_score = np.sqrt(euc_dis.sum())
+                dist.append(match_score)
 
-            # for D_des in (feature_desc_transformed):
-            distance = np.linalg.norm(mean_transformed - query_desc_transformed)
-                    # all_dist.append(distance)
-            # min_dist = min(all_dist)
-            result[label] = distance
+            result[label] = min(dist)
 
         classification = {}
 
-        flag = False
-        if result["dorsal"] > result["palmar"]:
-            flag = True
-            classification['Aspect of Hand:'] = 'palmar'
-            print("palmar")
+        if result["dorsal_left"] > result["dorsal_right"]:
+            semi_final1 = result["dorsal_right"]
+            conclusion1 = "dorsal_right"
         else:
-            classification['Aspect of Hand:'] = 'dorsal'
-            print("dorsal")
+            semi_final1 = result["dorsal_left"]
+            conclusion1 = "dorsal_left"
 
-        if result["left"] > result["right"]:
-            if flag:
-                classification['Orientation:'] = 'Left'
-                print("Left")
-            else:
-                classification['Orientation:'] = 'Right'
-                print("Right")
+        if result["palmar_left"] > result["palmar_right"]:
+            semi_final2 = result["palmar_right"]
+            conclusion2 = "palmar_right"
         else:
-            if flag:
-                classification['Orientation:'] = 'Right'
-                print("Right")
-            else:
-                classification['Orientation:'] = 'Left'
-                print("Left")
+            semi_final2 = result["palmar_left"]
+            conclusion2 = "palmar_left"
 
-        if result['1'] > result['0']:
+        if semi_final1 > semi_final2:
+            res = conclusion2.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+        else:
+            res = conclusion1.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+
+        if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -350,50 +351,5 @@ class PrincipleComponentAnalysis(object):
         else:
             classification['Gender:'] = 'Male'
             print("male")
-        vz.visualize_classified_image(tail, classification, 'PCA', model_name)
 
-
-    def BOW(self, model):
-        model = "bag_" + model
-        labels = ["left", "right", "dorsal", "palmar", "Access", "NoAccess", "male", "female"]
-
-        for label in labels:
-            # print(label)
-
-            if label == "left" or label == "right":
-                search = "Orientation"
-            elif label == "dorsal" or label == "palmar":
-                search = "aspectOfHand"
-            elif label == "Access" or label == "NoAccess":
-                search = "accessories"
-                if label == "Access":
-                    label = '1'
-                else:
-                    label = '0'
-            elif label == "male" or label == "female":
-                search = "gender"
-            else:
-                print("Please provide correct label")
-                exit(1)
-
-            img_list = []
-            imageslist_Meta = []
-            frames = []
-
-            for descriptor in imagedb.ImageMetadata.find():
-                if descriptor[search] == label:
-                    imageslist_Meta.append(descriptor["imageName"])
-
-            # print(len(imageslist_Meta))
-
-            for descriptor in imagedb.image_models.find():
-                if descriptor["_id"] in imageslist_Meta:
-                    frames.append(descriptor[model])
-                    img_list.append(descriptor["_id"])
-
-            frames = pd.DataFrame(frames)
-            img_list = pd.DataFrame(img_list)
-            data = [img_list, frames]
-            frame = pd.concat(data, axis=1, sort=False)
-            filepath = "D:/CSE515MultiMediaWebDB/BoW_Analysis/" + str(label) + ".xlsx"
-            frame.to_excel(filepath, header=False, index=False)
+        vz.visualize_classified_image(tail, classification, 'SVD', model_name)
