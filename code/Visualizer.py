@@ -1,6 +1,7 @@
 import tkinter as tk
 import cv2
 import os
+import pymongo
 from HorizontalScrollableFrame import HSF
 import Constants as const
 from PIL import Image
@@ -12,7 +13,34 @@ thumbnail_size = (160, 120)
 ls_width = 1125
 data_ls_height = 780
 ftr_ls_height = 225
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
+imagedb = client["imagedb"]
 
+
+def get_subject_imgnames(subject):
+    img_names = []
+
+    for img in subject['dorsal_left']:
+        img_names.append(img)
+    for img in subject['dorsal_right']:
+        img_names.append(img)
+    for img in subject['palmar_left']:
+        img_names.append(img)
+    for img in subject['palmar_right']:
+        img_names.append(img)
+
+    # first_img = 0
+    """ Code to take at most one image from each aspect
+    if len(subject['dorsal_left']) > 0:
+        img_names.append(subject['dorsal_left'][first_img])
+    if len(subject['dorsal_right']) > 0:
+        img_names.append(subject['dorsal_right'][first_img])
+    if len(subject['palmar_left']) > 0:
+        img_names.append(subject['palmar_left'][first_img])
+    if len(subject['palmar_right']) > 0:
+        img_names.append(subject['palmar_right'][first_img])"""
+
+    return img_names
 
 def create_thumbnail(img_id):
     # Load an image using OpenCV
@@ -262,3 +290,89 @@ def visualize_classified_image(q_img, classification, technique, fm):
 
     window.mainloop()
 
+
+def visualize_similar_subjects(q_subj, subject_dict, k, fm):
+    print('Visualization for Similar Subjects called')
+    # Create a window
+    window = tk.Tk()
+    title_txt = "Visualization of Similar Subjects using LDA with %s Feature Descriptors and k of %s" % (fm, str(k))
+    window.title(title_txt)
+    q_holder = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+    q_lbl = tk.Label(q_holder, text='Query Subject %s' %q_subj)
+    q_name = tk.Label(q_holder, text='Query Image IDs')
+    """ rowspan set to 5 as that is the max count of rows for images 
+        and data that will be stored for at most 4 images per subject. """
+    q_holder.grid(row=0, column=0, columnspan=2, rowspan=5)
+    q_lbl.grid(row=0, column=0)
+    q_name.grid(row=0, column=1)
+    query_subject = imagedb.subjects.find_one({'_id': q_subj})
+    img_names = get_subject_imgnames(query_subject)
+
+    q_photos = []
+    q_count = 0
+    cur_row = 1
+    img_col = 0
+    id_col = 1
+    for img in img_names:
+        q_img = create_thumbnail(img)
+        q_canvas = tk.Canvas(q_holder, width=thumbnail_size[0], height=thumbnail_size[1])
+        q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_img))
+        q_photos.append(q_photo)
+        # Add a PhotoImage to the Canvas
+        q_canvas.create_image(0, 0, image=q_photos[q_count], anchor=tk.NW)
+        q_count += 1
+        # print('Giving label %s to last image loaded' % q_img)
+        # print()
+        q_id = tk.Label(q_holder, text=img)
+        q_canvas.grid(row=cur_row, column=img_col)
+        q_id.grid(row=cur_row, column=id_col)
+        cur_row += 1
+
+    subj_photos = []
+    subj_row = 0
+    s_count = 0
+    s_photo_count = 0
+    subject_num = 1
+    s_img_col = img_col + 2
+    s_id_col = id_col + 2
+    for subject, score in sorted(subject_dict.items(), key=lambda item: item[1]):
+        """ Only show top 3 similar subjects """
+        if s_count < 3:
+            subj_holder = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+            subject_lbl = tk.Label(subj_holder, text='Similar Subject #%s: %s' % (subject_num, subject))
+            subject_score = tk.Label(subj_holder, text='Score: %s' % str(score))
+            subj_holder.grid(row=subj_row, column=s_img_col, columnspan=2, rowspan=5)
+            subject_lbl.grid(row=subj_row, column=s_img_col)
+            subject_score.grid(row=subj_row, column=s_id_col)
+            """ Up the row after the labels """
+            subj_row += 1
+            s_collection = imagedb.subjects.find_one({'_id': subject})
+            s_imgs = get_subject_imgnames(s_collection)
+
+            for img in s_imgs:
+                s_img = create_thumbnail(img)
+                s_canvas = tk.Canvas(subj_holder, width=thumbnail_size[0], height=thumbnail_size[1])
+                s_photo = ImageTk.PhotoImage(image=Image.fromarray(s_img))
+                subj_photos.append(s_photo)
+                # Add a PhotoImage to the Canvas
+                s_canvas.create_image(0, 0, image=subj_photos[s_photo_count], anchor=tk.NW)
+                # print('Giving label %s to last image loaded' % s_img)
+                # print()
+                q_id = tk.Label(subj_holder, text=img)
+                s_canvas.grid(row=subj_row, column=s_img_col)
+                q_id.grid(row=subj_row, column=s_id_col)
+                """ Up the count after adding the image thumbnail """
+                s_photo_count += 1
+
+                subj_row += 1
+
+            """ Move the columns over 2 after adding each subject. """
+            s_img_col += 2
+            s_id_col += 2
+            """ Also up the subject number """
+            subject_num += 1
+            s_count += 1
+            """ Reset the row to 0 after each subject finishes."""
+            subj_row = 0
+
+    window.mainloop()

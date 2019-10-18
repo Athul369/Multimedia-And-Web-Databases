@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import pymongo
 from sklearn.decomposition import NMF
+import Visualizer as vz
 import Constants as const
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
@@ -25,7 +26,7 @@ class Subjects(object):
         return np.sum(np.where(p != 0, p * np.log(p / q), 0))
 
     def similar3Subjects(self, model, k, subjectId):
-
+        model_name = model
         model = "bag_" + model
         subject_dict = {}
         dorsal_left_Desc= []
@@ -122,10 +123,11 @@ class Subjects(object):
                         minKLCM = min(minKLCM, self.kl(palmar_right_Desc_transformedCM[i], dorsal_left_Desc_transformedCM[j]))
                 mx += minKL + 0.2*minKLCM
 
-            if params>0:
+            if params > 0:
                 score_dict[key] = mx/params
 
         z = 0
+        vz.visualize_similar_subjects(subjectId, score_dict, k, model_name)
         for key, value in sorted(score_dict.items(), key=lambda item: item[1]):
             if z < 3:
                 print(str(key) + " has matching score:: " + str(value))
