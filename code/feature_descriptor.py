@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 
 # import dbtask
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', 27017)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 
@@ -43,6 +43,8 @@ def subjectMeta():
 
 def createKMeans(model, k):
     feature_desc = None
+    field_name = "bag_"+model
+    imagedb.image_models.update({}, {"$unset": {field_name : 1}})
     for descriptor in imagedb.image_models.find():
         if feature_desc is None:
             feature_desc = pd.DataFrame(descriptor[model])
@@ -71,7 +73,7 @@ def calculate_fd(path):
 
         md = CM(image)
         lst = md.getFeatureDescriptors()
-        print(lst)
+        #  print(lst)
         dict["CM"] = lst
 
         md = LBP(image)
@@ -94,11 +96,13 @@ def calculate_fd(path):
 
 
 # Main
-path = input("Enter Path: ")
-calculate_fd(path)
-
-createKMeans("CM", 30)
-createKMeans("HOG", 30)
-createKMeans("SIFT", 30)
-createKMeans("LBP", 30)
-subjectMeta()
+# imagedb.image_models.drop()
+# imagedb.subjects.drop()
+# path = input("Enter Path: ")
+# calculate_fd(path)
+#
+createKMeans("CM", 25)
+# createKMeans("HOG", 30)
+# createKMeans("SIFT", 30)
+# createKMeans("LBP", 30)
+# subjectMeta()
