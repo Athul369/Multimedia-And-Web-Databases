@@ -2,11 +2,12 @@ import tkinter as tk
 import cv2
 import os
 from HorizontalScrollableFrame import HSF
+import Constants as const
 from PIL import Image
 from PIL import ImageTk
 
-test_dir = r"C:\Users\tyler\Desktop\phase2"
-img_dir = r"C:\Users\tyler\Desktop\phase2test\cse515_dataset_2\Dataset2"
+""" Constants.py should hold the path containing all the images"""
+img_dir = const.DB_IMG_PATH
 thumbnail_size = (160, 120)
 ls_width = 1125
 data_ls_height = 780

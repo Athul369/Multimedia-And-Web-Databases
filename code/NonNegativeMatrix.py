@@ -5,9 +5,10 @@ import pandas as pd
 import numpy as np
 import pymongo
 import Visualizer as vz
+import Constants as const
 from sklearn.decomposition import NMF
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 dr_name = 'NMF'

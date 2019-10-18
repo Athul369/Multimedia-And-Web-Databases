@@ -3,8 +3,9 @@ import numpy as np
 import pandas as pd
 import pymongo
 from sklearn.decomposition import NMF
+import Constants as const
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 

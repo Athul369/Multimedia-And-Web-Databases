@@ -2,6 +2,7 @@ from LocalBinaryPatterns import LBP
 from ColorMoments import CM
 from SIFT import SIFT
 from HOGmain import HOG
+import Constants as const
 import os
 import glob
 import pymongo
@@ -11,7 +12,7 @@ from sklearn.cluster import KMeans
 
 # import dbtask
 
-client = pymongo.MongoClient('localhost', 27017)
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 

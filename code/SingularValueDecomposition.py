@@ -1,13 +1,14 @@
 from sklearn.decomposition import TruncatedSVD
 from scipy.linalg import svd
 import Visualizer as vz
+import Constants as const
 import numpy as np
 import pandas as pd
 import pymongo
 import os
 import shutil
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 meta = imagedb["ImageMetadata"]

@@ -7,8 +7,9 @@ from numpy import linalg
 import math
 import shutil
 import Visualizer as vz
+import Constants as const
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 meta = imagedb["ImageMetadata"]
