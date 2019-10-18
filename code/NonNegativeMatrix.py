@@ -5,10 +5,9 @@ import pandas as pd
 import numpy as np
 import pymongo
 import Visualizer as vz
-from sklearn.cluster import KMeans
 from sklearn.decomposition import NMF
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', 27017)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 
@@ -27,7 +26,7 @@ class NM_F(object):
         model = NMF(n_components=k, init='random', random_state=0)
         W = model.fit_transform(feature_desc)
         H = model.components_
-        W=NM_F.rescaleToBasis(W)
+        W = NM_F.rescaleToBasis(W)
 
         visualizeArr = []
 
@@ -44,12 +43,11 @@ class NM_F(object):
         visualizeArr = pd.DataFrame(visualizeArr)
         vz.visualize_data_ls(visualizeArr, 'NMF', model_name, '')
         print(W)
-        
+
         #####Feature discriptor and latent space dot product . below "feature_latent_product" functions returns a array
 
-        feature_latentsemantics_visualizer=NM_F.feature_latent_product(feature_desc,H,img_list)
+        feature_latentsemantics_visualizer = NM_F.feature_latent_product(feature_desc, H, img_list)
         print(feature_latentsemantics_visualizer)
-        
 
     def mSimilarImage(self, imgLoc, model, k, m):
         model_name = model
@@ -72,12 +70,12 @@ class NM_F(object):
         for i, row in enumerate(W):
             if (i == id):
                 continue
-#             euc_dis = np.square(np.subtract(W[id], W[i]))
-#             match_score = np.sqrt(euc_dis.sum(0))
-#             rank_dict[img_list[i]] = match_score
-            match_score=NM_F.nvsc(W[id], W[i])
+            #             euc_dis = np.square(np.subtract(W[id], W[i]))
+            #             match_score = np.sqrt(euc_dis.sum(0))
+            #             rank_dict[img_list[i]] = match_score
+            match_score = NM_F.nvsc(W[id], W[i])
             print(match_score)
-            rank_dict[img_list[i]]=match_score
+            rank_dict[img_list[i]] = match_score
         # res_dir = os.path.join('..', 'output', model[4:], 'match')
         # if os.path.exists(res_dir):
         #     shutil.rmtree(res_dir)
@@ -131,10 +129,9 @@ class NM_F(object):
 
         nmf_ = NMF(n_components=k, init='random', random_state=0)
 
-
         feature_desc_transformed = nmf_.fit_transform(feature_desc)
-        #H = nmf_.components_
-        W=NM_F.rescaleToBasis(feature_desc_transformed)
+        # H = nmf_.components_
+        W = NM_F.rescaleToBasis(feature_desc_transformed)
 
         visualizeArr = []
 
@@ -204,9 +201,9 @@ class NM_F(object):
         for i, row in enumerate(feature_desc_transformed):
             if (i == id):
                 continue
-#             euc_dis = np.square(np.subtract(feature_desc_transformed[id], feature_desc_transformed[i]))
-#             match_score = np.sqrt(euc_dis.sum(0))
-#             rank_dict[img_list[i]] = match_score
+            #             euc_dis = np.square(np.subtract(feature_desc_transformed[id], feature_desc_transformed[i]))
+            #             match_score = np.sqrt(euc_dis.sum(0))
+            #             rank_dict[img_list[i]] = match_score
             match_score = NM_F.nvsc(feature_desc_transformed[id], feature_desc_transformed[i])
             print(match_score)
             rank_dict[img_list[i]] = match_score
@@ -221,7 +218,7 @@ class NM_F(object):
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
-                #shutil.copy(os.path.join(head, key), res_dir)
+                # shutil.copy(os.path.join(head, key), res_dir)
                 count += 1
             else:
                 break
@@ -236,90 +233,92 @@ class NM_F(object):
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
 
-        labels = ["dorsal", "palmar", "left", "right", "Access", "NoAccess", "male", "female"]
+        Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
-        for label in labels:
-            # print(label)
+        for label in Labels:
+            label_Desc = []
+            desc_img_list = []
+            imageslist_Meta = []
 
-            if label == "left" or label == "right":
-                search = "Orientation"
-            elif label == "dorsal" or label == "palmar":
-                search = "aspectOfHand"
+            if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
+                for subject in imagedb.subjects.find():
+                    for img in subject[label]:
+                        label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
+                        desc_img_list.append(img)
+
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = '1'
+                    label = 1
                 else:
-                    label = '0'
+                    label = 0
+
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
+                        imageslist_Meta.append(descriptor["imageName"])
+
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
+
             elif label == "male" or label == "female":
                 search = "gender"
-            else:
-                print("Please provide correct label")
-                exit(1)
-
-            img_list = []
-            imageslist_Meta = []
-            frames = []
-
-            for descriptor in imagedb.ImageMetadata.find():
-                if search == "Orientation" and descriptor["aspectOfHand"] == "palmar":
-                    if descriptor[search] != label:
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
                         imageslist_Meta.append(descriptor["imageName"])
-                    continue
-                if descriptor[search] == label:
-                    imageslist_Meta.append(descriptor["imageName"])
 
-            # print(len(imageslist_Meta))
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
 
-            for descriptor in imagedb.image_models.find():
-                if descriptor["_id"] in imageslist_Meta and descriptor["_id"] != tail:
-                    frames.append(descriptor[model])
-                    img_list.append(descriptor["_id"])
-
-            # svd = TruncatedSVD(k)
             nmf_ = NMF(n_components=k, init='random', random_state=0)
-            feature_desc_transformed = nmf_.fit_transform(frames)
-            query_desc_transformed = nmf_.transform(query_desc)
-            mean_transformed = np.true_divide(feature_desc_transformed.sum(0), len(img_list))
+            lda_Obj = nmf_.fit(label_Desc)
+            label_desc_transformed = lda_Obj.transform(label_Desc)
+            query_desc_transformed = lda_Obj.transform(query_desc)
 
-            all_dist = []
+            dist = []
 
-            # for D_des in feature_desc_transformed:
-            #     distance = np.linalg.norm(D_des - query_desc_transformed)
-            #     all_dist.append(distance)
-            # min_dist = min(all_dist)
+            for i, db_desc in enumerate(label_desc_transformed):
+                if desc_img_list[i] == tail:
+                    continue
+                euc_dis = np.square(np.subtract(db_desc, query_desc_transformed))
+                match_score = np.sqrt(euc_dis.sum())
+                dist.append(match_score)
 
-            min_dist = np.linalg.norm(mean_transformed - query_desc_transformed)
-
-            result[label] = min_dist
+            result[label] = min(dist)
 
         classification = {}
 
-        flag = False
-        if result["dorsal"] > result["palmar"]:
-            flag = True
-            classification['Aspect of Hand:'] = 'palmar'
-            print("palmar")
+        if result["dorsal_left"] > result["dorsal_right"]:
+            semi_final1 = result["dorsal_right"]
+            conclusion1 = "dorsal_right"
         else:
-            classification['Aspect of Hand:'] = 'dorsal'
-            print("dorsal")
+            semi_final1 = result["dorsal_left"]
+            conclusion1 = "dorsal_left"
 
-        if result["left"] > result["right"]:
-            if flag:
-                classification['Orientation:'] = 'Left'
-                print("Left")
-            else:
-                classification['Orientation:'] = 'Right'
-                print("Right")
+        if result["palmar_left"] > result["palmar_right"]:
+            semi_final2 = result["palmar_right"]
+            conclusion2 = "palmar_right"
         else:
-            if flag:
-                classification['Orientation:'] = 'Right'
-                print("Right")
-            else:
-                classification['Orientation:'] = 'Left'
-                print("Left")
+            semi_final2 = result["palmar_left"]
+            conclusion2 = "palmar_left"
 
-        if result['1'] > result['0']:
+        if semi_final1 > semi_final2:
+            res = conclusion2.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+        else:
+            res = conclusion1.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+
+        if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -332,14 +331,15 @@ class NM_F(object):
         else:
             classification['Gender:'] = 'Male'
             print("male")
-        vz.visualize_classified_image(tail, classification, 'NMF', model_name)
+
+        vz.visualize_classified_image(tail, classification, 'SVD', model_name)
 
     def rescaleToBasis(arr):
         a = 0
-        col_magnitude=np.sqrt(np.sum(np.square(arr), axis=0))
-        rescaled_array=np.divide(arr,col_magnitude)
+        col_magnitude = np.sqrt(np.sum(np.square(arr), axis=0))
+        rescaled_array = np.divide(arr, col_magnitude)
         return rescaled_array
-    
+
     ################### distance measurement function
     def nvsc(X, Y):
         sumMin = 0
@@ -351,23 +351,19 @@ class NM_F(object):
         chi = sumMin / sumMax
         distance = 1 - chi * chi
         return distance
-    
-####################feature- latentsemantics  visualizer function
 
-    def feature_latent_product(featMat,latMat,image_list):
-        a=0
-        visualizerDict=[]
+    ####################feature- latentsemantics  visualizer function
+
+    def feature_latent_product(featMat, latMat, image_list):
+        a = 0
+        visualizerDict = []
         for i in range(len(latMat)):
-            maxDict={}
+            maxDict = {}
 
             for j in range(len(featMat)):
-                maxDict[image_list[j]]=np.dot(latMat[i],featMat[j])
+                maxDict[image_list[j]] = np.dot(latMat[i], featMat[j])
 
             maximum = max(maxDict, key=maxDict.get)
-            visualizerDict.append((maximum,maxDict[maximum]))
+            visualizerDict.append((maximum, maxDict[maximum]))
 
         return visualizerDict
-
-
-
-
