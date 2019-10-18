@@ -303,7 +303,7 @@ class LDA(object):
     #         print("male")
 
     def ImageClassfication(self, imgLoc, model, k):
-
+        model_name = model
         result = {}
         model = "bag_" + model
         head, tail = os.path.split(imgLoc)
@@ -324,9 +324,9 @@ class LDA(object):
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = 1
+                    label = '1'
                 else:
-                    label = 0
+                    label = '0'
             elif label == "male" or label == "female":
                 search = "gender"
             else:
@@ -366,24 +366,35 @@ class LDA(object):
             min_dist = min(all_dist)
             result[label] = min_dist
 
+        classification = {}
+
         # print(result["left"])
         # print(result["right"])
-        if result["left"] > result["right"]:
-            print("Right")
-        else:
-            print("Left")
-
         if result["dorsal"] > result["palmar"]:
             print("palmar")
+            classification['Aspect of Hand:'] = 'palmar'
         else:
             print("dorsal")
+            classification['Aspect of Hand:'] = 'dorsal'
 
-        if result[1] > result[0]:
+        if result["left"] > result["right"]:
+            classification['Orientation:'] = 'Right'
+            print("Right")
+        else:
+            classification['Orientation:'] = 'Left'
+            print("Left")
+
+        if result['1'] > result['0']:
+            classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
+            classification['Accessories:'] = 'With Accessories'
             print("Access")
 
         if result["male"] > result["female"]:
+            classification['Gender:'] = 'Female'
             print("female")
         else:
+            classification['Gender:'] = 'Male'
             print("male")
+        vz.visualize_classified_image(tail, classification, 'LDA', model_name)

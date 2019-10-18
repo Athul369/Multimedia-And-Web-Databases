@@ -243,8 +243,8 @@ class PrincipleComponentAnalysis(object):
 
                 break
 
-    def ImageClassfication(self, imgLoc, model, k ):
-
+    def ImageClassfication(self, imgLoc, model, k):
+        model_name = model
         result = {}
         model = "bag_" + model
         head, tail = os.path.split(imgLoc)
@@ -265,9 +265,9 @@ class PrincipleComponentAnalysis(object):
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = 1
+                    label = '1'
                 else:
-                    label = 0
+                    label = '0'
             elif label == "male" or label == "female":
                 search = "gender"
             else:
@@ -311,32 +311,46 @@ class PrincipleComponentAnalysis(object):
             # min_dist = min(all_dist)
             result[label] = distance
 
+        classification = {}
+
         flag = False
         if result["dorsal"] > result["palmar"]:
             flag = True
+            classification['Aspect of Hand:'] = 'palmar'
             print("palmar")
         else:
+            classification['Aspect of Hand:'] = 'dorsal'
             print("dorsal")
+
         if result["left"] > result["right"]:
             if flag:
+                classification['Orientation:'] = 'Left'
                 print("Left")
             else:
+                classification['Orientation:'] = 'Right'
                 print("Right")
         else:
             if flag:
+                classification['Orientation:'] = 'Right'
                 print("Right")
             else:
+                classification['Orientation:'] = 'Left'
                 print("Left")
 
-        if result[1] > result[0]:
+        if result['1'] > result['0']:
+            classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
+            classification['Accessories:'] = 'With Accessories'
             print("Access")
 
         if result["male"] > result["female"]:
+            classification['Gender:'] = 'Female'
             print("female")
         else:
+            classification['Gender:'] = 'Male'
             print("male")
+        vz.visualize_classified_image(tail, classification, 'PCA', model_name)
 
 
     def BOW(self, model):
@@ -353,9 +367,9 @@ class PrincipleComponentAnalysis(object):
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = 1
+                    label = '1'
                 else:
-                    label = 0
+                    label = '0'
             elif label == "male" or label == "female":
                 search = "gender"
             else:

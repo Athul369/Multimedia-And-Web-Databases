@@ -45,20 +45,25 @@ nmf1 = NM_F()
 # nmf1.LabelLatentSemantic("left", "CM", 20)
 
 #task4
-pca1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 20)
-pca1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
-lda1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 10)
-lda1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
-svd1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 10)
-svd1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
-nmf1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 10)
-nmf1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
+# pca1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 20)
+# pca1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
+# lda1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 10)
+# lda1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
+# svd1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 10)
+# svd1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
+# nmf1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 10, 10)
+# nmf1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
 
 
 #task5
-# pca1.ImageClassfication("./phase2_Images/Hand_0000928.jpg", "SIFT", 20)
-
-
+pca1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
+pca1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
+lda1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
+lda1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
+svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
+svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
+nmf1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
+nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
 
 
 #sd.createKLatentSymantics("LBP",10)

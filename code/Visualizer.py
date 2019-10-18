@@ -222,3 +222,42 @@ def visualize_feature_ls(feature_ls, technique, fm, label):
 
     frame.pack(expand=True, fill='both')
     window.mainloop()
+
+
+def visualize_classified_image(q_img, classification, technique, fm):
+    window = tk.Tk()
+    title_txt = "Classification of Unlabeled Query Image for %s with %s Feature Descriptors" % (technique, fm)
+    window.title(title_txt)
+    q_header = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+    q_lbl = tk.Label(q_header, text='Query Image')
+    q_name = tk.Label(q_header, text='Query Image ID')
+    """ rowspan set to 4 as that is the max count of rows for classification data."""
+    q_header.grid(row=0, column=0, columnspan=2, rowspan=4)
+    q_lbl.grid(row=0, column=0)
+    q_name.grid(row=0, column=1)
+    # q_row = tk.Frame(window)
+    q_cimg = create_thumbnail(q_img)
+    q_canvas = tk.Canvas(q_header, width=thumbnail_size[0], height=thumbnail_size[1])
+    q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_cimg))
+    # Add a PhotoImage to the Canvas
+    q_canvas.create_image(0, 0, image=q_photo, anchor=tk.NW)
+    # print('Giving label %s to last image loaded' % q_img)
+    # print()
+    q_id = tk.Label(q_header, text=q_img)
+    q_canvas.grid(row=1, column=0)
+    q_id.grid(row=1, column=1)
+
+    cur_row = 0
+    lbl_col = 2
+    val_col = 3
+    for label, value in classification.items():
+        row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+        c_label = tk.Label(row, text=label, width=15)
+        c_value = tk.Label(row, text=value, width=15)
+        row.grid(row=cur_row, column=lbl_col, columnspan=2)
+        c_label.grid(row=cur_row, column=lbl_col)
+        c_value.grid(row=cur_row, column=val_col)
+        cur_row += 1
+
+    window.mainloop()
+
