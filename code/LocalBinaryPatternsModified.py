@@ -41,10 +41,7 @@ class LBP(ModelBase):
             [local_binary_pattern(block, self.no_points, self.radius, 'default').reshape(10000, ) for block in blocks])
         lbp_histograms = np.array([np.histogram(lbp, bins=np.arange(257), density=True)[0] for lbp in lbps])
 
-        concat_histograms = lbp_histograms[0]
-
-        for i in range(1, len(lbp_histograms)):
-            concat_histograms = np.concatenate([concat_histograms, lbp_histograms[i]])
+        concat_histograms = lbp_histograms.tolist()
 
         return concat_histograms
 
