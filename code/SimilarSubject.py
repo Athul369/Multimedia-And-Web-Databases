@@ -23,7 +23,7 @@ class Subjects(object):
 
         return np.sum(np.where(p != 0, p * np.log(p / q), 0))
 
-    def similar3Subjects(self ,model, k, subjectId):
+    def similar3Subjects(self, model, k, subjectId):
 
         model = "bag_" + model
         subject_dict = {}
@@ -39,21 +39,21 @@ class Subjects(object):
         for subject in imagedb.subjects.find():
             subject_dict[subject["_id"]] = [[] for i in range(4)]
             for img in subject["dorsal_left"]:
-                dorsal_left_Desc.append(imagedb.image_models.find({"_id":img})[0][model])
+                dorsal_left_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                 dorsal_left_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
-                subject_dict[subject["_id"]][0].append(len(dorsal_left_Desc) -1)
+                subject_dict[subject["_id"]][0].append(len(dorsal_left_Desc)-1)
             for img in subject["dorsal_right"]:
-                dorsal_right_Desc.append(imagedb.image_models.find({"_id":img})[0][model])
+                dorsal_right_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                 dorsal_right_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
-                subject_dict[subject["_id"]][1].append(len(dorsal_right_Desc) -1)
+                subject_dict[subject["_id"]][1].append(len(dorsal_right_Desc)-1)
             for img in subject["palmar_left"]:
-                palmar_left_Desc.append(imagedb.image_models.find({"_id":img})[0][model])
+                palmar_left_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                 palmar_left_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
-                subject_dict[subject["_id"]][2].append(len(palmar_left_Desc) -1)
+                subject_dict[subject["_id"]][2].append(len(palmar_left_Desc)-1)
             for img in subject["palmar_right"]:
-                palmar_right_Desc.append(imagedb.image_models.find({"_id":img})[0][model])
+                palmar_right_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                 palmar_right_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
-                subject_dict[subject["_id"]][3].append(len(palmar_right_Desc) -1)
+                subject_dict[subject["_id"]][3].append(len(palmar_right_Desc)-1)
 
         lda_dl = LatentDirichletAllocation(k, max_iter=25)
         lda_dr = LatentDirichletAllocation(k, max_iter=25)
@@ -81,18 +81,18 @@ class Subjects(object):
                 continue
             mx = 0
             params = 0
-            if len(subject_dict[subjectId][0]) > 0 and len(subject_dict[key][0])>0:
-                params+=1
+            if len(subject_dict[subjectId][0]) > 0 and len(subject_dict[key][0]) > 0:
+                params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
                 for i in subject_dict[subjectId][0]:
                     for j in subject_dict[key][0]:
                         minKL = min(minKL, self.kl(dorsal_left_Desc_transformed[i], dorsal_left_Desc_transformed[j]))
                         minKLCM = min(minKLCM, self.kl(dorsal_left_Desc_transformedCM[i], dorsal_left_Desc_transformedCM[j]))
-                mx+= minKL + 0.2*minKLCM
+                mx += minKL + 0.2*minKLCM
 
             if len(subject_dict[subjectId][1]) > 0 and len(subject_dict[key][1])>0:
-                params+=1
+                params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
                 for i in subject_dict[subjectId][1]:
@@ -101,30 +101,30 @@ class Subjects(object):
                         minKLCM = min(minKLCM, self.kl(dorsal_right_Desc_transformedCM[i], dorsal_right_Desc_transformedCM[j]))
                 mx+= minKL + 0.2*minKLCM
 
-            if len(subject_dict[subjectId][2]) > 0 and len(subject_dict[key][2])>0:
-                params+=1
+            if len(subject_dict[subjectId][2]) > 0 and len(subject_dict[key][2]) > 0:
+                params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
                 for i in subject_dict[subjectId][2]:
                     for j in subject_dict[key][2]:
                         minKL = min(minKL, self.kl(palmar_left_Desc_transformed[i], palmar_left_Desc_transformed[j]))
                         minKLCM = min(minKLCM, self.kl(palmar_left_Desc_transformedCM[i], palmar_left_Desc_transformedCM[j]))
-                mx+= minKL + 0.2*minKLCM
+                mx += minKL + 0.2*minKLCM
 
-            if len(subject_dict[subjectId][3]) > 0 and len(subject_dict[key][3])>0:
-                params+=1
+            if len(subject_dict[subjectId][3]) > 0 and len(subject_dict[key][3]) > 0:
+                params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
                 for i in subject_dict[subjectId][3]:
                     for j in subject_dict[key][3]:
                         minKL = min(minKL, self.kl(palmar_right_Desc_transformed[i], dorsal_left_Desc_transformed[j]))
                         minKLCM = min(minKLCM, self.kl(palmar_right_Desc_transformedCM[i], dorsal_left_Desc_transformedCM[j]))
-                mx+= minKL + 0.2*minKLCM
+                mx += minKL + 0.2*minKLCM
 
             if params>0:
                 score_dict[key] = mx/params
 
-        z =0
+        z = 0
         for key, value in sorted(score_dict.items(), key=lambda item: item[1]):
             if z < 3:
                 print(str(key) + " has matching score:: " + str(value))
@@ -132,7 +132,7 @@ class Subjects(object):
             else:
                 break
 
-    def similarSubjectsAssignment(self ,model, k, subjectId, simMat, sub_list):
+    def similarSubjectsAssignment(self, model, k, subjectId, simMat, sub_list):
 
         model = "bag_" + model
         subject_dict = {}

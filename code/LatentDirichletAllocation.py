@@ -12,6 +12,7 @@ client = pymongo.MongoClient('localhost', 27018)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 meta = imagedb["ImageMetadata"]
+dr_name = 'LDA'
 
 
 class LDA(object):
@@ -46,7 +47,7 @@ class LDA(object):
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, 'LDA', model_name, '')
+        vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
 
     def kl(self, p, q):
         """Kullback-Leibler divergence D(P || Q) for discrete distributions
@@ -93,7 +94,7 @@ class LDA(object):
         count = 0
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model_name, '')
+        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, '')
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
@@ -199,7 +200,7 @@ class LDA(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
-        vz.visualize_matching_images(tail, rank_dict, m, 'LDA', model_name, label_str)
+        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -329,9 +330,9 @@ class LDA(object):
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = 1
+                    label = '1'
                 else:
-                    label = 0
+                    label = '0'
 
                 for descriptor in imagedb.ImageMetadata.find():
                     if descriptor[search] == label:
@@ -399,7 +400,7 @@ class LDA(object):
             print(res[1])
             print(res[0])
 
-        if result[1] > result[0]:
+        if result['1'] > result['0']:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -413,7 +414,7 @@ class LDA(object):
             classification['Gender:'] = 'Male'
             print("male")
 
-        vz.visualize_classified_image(tail, classification, 'SVD', model_name)
+        vz.visualize_classified_image(tail, classification, dr_name, model_name)
 
 
 
