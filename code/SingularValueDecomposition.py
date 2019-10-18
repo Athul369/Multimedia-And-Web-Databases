@@ -7,7 +7,7 @@ import pymongo
 import os
 import shutil
 
-client = pymongo.MongoClient('localhost', 27018)
+client = pymongo.MongoClient('localhost', 27017)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 meta = imagedb["ImageMetadata"]
@@ -217,61 +217,61 @@ class SVD(object):
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
 
-        labels = ["dorsal", "palmar", "left", "right", "Access", "NoAccess", "male", "female"]
+        Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
-        for label in labels:
-            # print(label)
+        for label in Labels:
+            label_Desc = []
+            desc_img_list = []
+            imageslist_Meta = []
 
-            if label == "left" or label == "right":
-                search = "Orientation"
-            elif label == "dorsal" or label == "palmar":
-                search = "aspectOfHand"
+            if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
+                for subject in imagedb.subjects.find():
+                    for img in subject[label]:
+                        label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
+                        desc_img_list.append(img)
+
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = '1'
+                    label = 1
                 else:
-                    label = '0'
+                    label = 0
+
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
+                        imageslist_Meta.append(descriptor["imageName"])
+
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
+
             elif label == "male" or label == "female":
                 search = "gender"
-            else:
-                print("Please provide correct label")
-                exit(1)
-
-            img_list = []
-            imageslist_Meta = []
-            frames = []
-
-            for descriptor in imagedb.ImageMetadata.find():
-                if search == "Orientation" and descriptor["aspectOfHand"] =="palmar":
-                    if descriptor[search] != label:
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
                         imageslist_Meta.append(descriptor["imageName"])
-                    continue
-                if descriptor[search] == label:
-                    imageslist_Meta.append(descriptor["imageName"])
 
-            # print(len(imageslist_Meta))
-
-            for descriptor in imagedb.image_models.find():
-                if descriptor["_id"] in imageslist_Meta and descriptor["_id"] != tail:
-                    frames.append(descriptor[model])
-                    img_list.append(descriptor["_id"])
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
 
             svd = TruncatedSVD(k)
-            feature_desc_transformed = svd.fit_transform(frames)
-            query_desc_transformed = svd.transform(query_desc)
-            mean_transformed = np.true_divide(feature_desc_transformed.sum(0), len(img_list))
+            svd_Obj = svd.fit(label_Desc)
+            label_desc_transformed = svd_Obj.transform(label_Desc)
+            query_desc_transformed = svd_Obj.transform(query_desc)
 
-            all_dist = []
+            dist = []
 
-            # for D_des in feature_desc_transformed:
-            #     distance = np.linalg.norm(D_des - query_desc_transformed)
-            #     all_dist.append(distance)
-            # min_dist = min(all_dist)
+            for i, db_desc in enumerate(label_desc_transformed):
+                if desc_img_list[i] == tail:
+                    continue
+                euc_dis = np.square(np.subtract(db_desc, query_desc_transformed))
+                match_score = np.sqrt(euc_dis.sum())
+                dist.append(match_score)
 
-            min_dist = np.linalg.norm(mean_transformed - query_desc_transformed)
-
-            result[label] = min_dist
+            result[label] = min(dist)
 
         classification = {}
 
