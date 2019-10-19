@@ -337,9 +337,9 @@ class NM_F(object):
         vz.visualize_classified_image(tail, classification, dr_name, model_name)
 
     def rescaleToBasis(arr):
-        a = 0
-        col_magnitude = np.sqrt(np.sum(np.square(arr), axis=0))
-        rescaled_array = np.divide(arr, col_magnitude)
+        np.seterr(divide='ignore', invalid='ignore')
+        row_magnitude = np.sqrt(np.sum(np.square(arr), axis=1))
+        rescaled_array = np.divide(arr, row_magnitude[:, None])
         return rescaled_array
 
     ################### distance measurement function
