@@ -15,7 +15,7 @@ ls_width = 1125
 subj_width = 1300
 data_ls_height = 780
 ftr_ls_height = 225
-subject_ls_height = 500
+subject_ls_height = 850
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 
@@ -187,7 +187,7 @@ def visualize_data_ls(data_ls, technique, fm, label):
             match_label.grid(row=v_row, column=img_col, columnspan=2)
             """ After displaying the label of the image to be displayed up the current row value. """
             v_row += 1
-            label = tk.Label(row, text=str(score))
+            label = tk.Label(row, text=str(round(score, 8)))
             row.grid(row=v_row, column=img_col, columnspan=2)
             canvas.grid(row=v_row, column=img_col)
             label.grid(row=v_row, column=lbl_col)
@@ -238,7 +238,7 @@ def visualize_feature_ls(feature_ls, technique, fm, label):
         for feature, score in ls_list:
             data_row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
             feature_label = tk.Label(data_row, text=str(feature), width=14)
-            score_label = tk.Label(data_row, text=str(score), width=16)
+            score_label = tk.Label(data_row, text=str(round(score, 8)), width=16)
             data_row.grid(row=v_row, column=ftr_col, columnspan=2)
             feature_label.grid(row=v_row, column=ftr_col)
             score_label.grid(row=v_row, column=lbl_col)
@@ -344,7 +344,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
         if s_count < 3:
             subj_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
             subject_lbl = tk.Label(subj_holder, text='Similar Subject #%s: %s' % (subject_num, subject))
-            subject_score = tk.Label(subj_holder, text='Score: %s' % str(score))
+            subject_score = tk.Label(subj_holder, text='Score: %s' % str(round(score, 8)))
             subj_holder.grid(row=subj_row, column=s_img_col, columnspan=2, rowspan=5)
             subject_lbl.grid(row=subj_row, column=s_img_col)
             subject_score.grid(row=subj_row, column=s_id_col)
@@ -414,7 +414,7 @@ def visualize_ss_matrix(ss_ls, k):
         for feature, score in ls_list:
             data_row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
             feature_label = tk.Label(data_row, text=str(feature), width=14)
-            score_label = tk.Label(data_row, text=str(score), width=16)
+            score_label = tk.Label(data_row, text=str(round(score, 8)), width=16)
             data_row.grid(row=v_row, column=ftr_col, columnspan=2)
             feature_label.grid(row=v_row, column=ftr_col)
             score_label.grid(row=v_row, column=lbl_col)

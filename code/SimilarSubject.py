@@ -230,8 +230,8 @@ class Subjects(object):
             self.similarSubjectsAssignment("SIFT", k, subject, simMat, sub_list)
 
         #print(simMat)
-        df = pd.DataFrame(simMat)
-        df.to_csv("../output_old/Sub2SubMatrix.csv", index=False, header=False)
+        # df = pd.DataFrame(simMat)
+        # df.to_csv("../output_old/Sub2SubMatrix.csv", index=False, header=False)
         nm = NMF(k)
         W = nm.fit_transform(simMat)
         Mat = self.rescaleToBasis(W)
@@ -247,7 +247,7 @@ class Subjects(object):
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
             """ Append the sorted array for each latent semantic """
-            visualizeArr.append(arr)
+            visualizeArr.append(arr[:30])
 
         visualizeArr = pd.DataFrame(visualizeArr)
         vz.visualize_ss_matrix(visualizeArr, num_ls)
