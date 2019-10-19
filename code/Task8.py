@@ -3,7 +3,9 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import NMF
+import Visualizer as vz
 
+k_value = input('Enter Value for k: ')
 
 def metadataRead(filepath, imagepath):
     metadataFile = pd.read_csv(filepath, sep=',', header=None)
@@ -39,7 +41,7 @@ def convertToBinaryMatrix(metaDataFrame):
     # print(metaDataFrame)
     metaDataFrame['accessories'] = metaDataFrame['accessories'].astype(int)
     featureList = metaDataFrame.columns
-    performNMF(metaDataFrame, 20, imageList, featureList)
+    performNMF(metaDataFrame, int(k_value), imageList, featureList)
 
 
 def performNMF(metaDataFrame, k, imageList, featureList):
@@ -53,6 +55,7 @@ def performNMF(metaDataFrame, k, imageList, featureList):
     # print(W)
     # print(H)
     W = rescaleToBasis(W)
+    img_space = []
     print("Top {} latent semantics in image-space".format(k))
     for i in range(k):
         col = W[:, i]
@@ -62,7 +65,12 @@ def performNMF(metaDataFrame, k, imageList, featureList):
         arr.sort(key=lambda x: x[1], reverse=True)
         print("Printing latent Semantic {} in image-space:".format(i + 1))
         print(arr)
+        img_space.append(arr[:50])
+    img_space = pd.DataFrame(img_space)
+    print(img_space.shape)
+    vz.visualize_img_space(k, img_space)
     print("Top {} latent semantics in metadata-space".format(k))
+    metadata_space = []
     for i in range(k):
         print(i)
         row = H[i]
@@ -72,6 +80,9 @@ def performNMF(metaDataFrame, k, imageList, featureList):
         arr.sort(key=lambda x: x[1], reverse=True)
         print("Printing latent Semantic {} in metadata-space:".format(i + 1))
         print(arr)
+        metadata_space.append(arr)
+    metadata_space = pd.DataFrame(metadata_space)
+    vz.visualize_metadata_space(k, metadata_space)
 
 
 def rescaleToBasis(arr):
@@ -80,9 +91,13 @@ def rescaleToBasis(arr):
     rescaled_array = np.divide(arr, row_magnitude[:, None])
     return rescaled_array
 
-#Use 11k metadata set
 
-metadatapath=input("Enter Metadata Path: ")
-imagedatapath=input("Enter Image Dataset Path: ")
-metadataRead(metadatapath,imagedatapath)
+#Use 11k metadata set
+# "C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Metadata\HandInfo.csv"
+# metadatapath = input("Enter Metadata Path: ")
+# "C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Hands"
+# imagedatapath = input("Enter Image Dataset Path: ")
+
+metadataRead(r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Metadata\HandInfo.csv",
+             r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Hands")
 

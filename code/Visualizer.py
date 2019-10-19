@@ -11,6 +11,8 @@ from PIL import ImageTk
 """ Constants.py should hold the path containing all the images"""
 img_dir = const.DB_IMG_PATH
 thumbnail_size = (160, 120)
+metadata_width = 900
+imgspace_width = 1300
 ls_width = 1125
 subj_width = 1300
 data_ls_height = 780
@@ -59,7 +61,7 @@ def visualize_matching_images(q_img, images_data, m, technique, fm, label):
     imgdata_to_visualize = []
     # Create a window
     window = tk.Tk()
-    title_txt = "Visualization of Similar Images for %s with %s Feature Descriptors" % (technique, fm)
+    title_txt = "Visualization of %s Most Related Images for %s with %s Feature Descriptors" % (str(m), technique, fm)
     if label != '':
         title_txt = title_txt + ' and label: ' + label
     window.title(title_txt)
@@ -299,7 +301,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
     # Create a window
     window = tk.Tk()
     frame = VSF(window, subj_width, data_ls_height)
-    title_txt = "Visualization of Similar Subjects using LDA with %s Feature Descriptors and k of %s" % (fm, str(k))
+    title_txt = "Visualization of 3 Most Related Subjects using LDA with %s Feature Descriptors and k of %s" % (fm, str(k))
     window.title(title_txt)
     q_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
     q_lbl = tk.Label(q_holder, text='Query Subject %s' % q_subj)
@@ -384,8 +386,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
 
 
 def visualize_ss_matrix(ss_ls, k):
-    """ Function to visualize the Feature to Latent Semantics Matrix.
-            Note k value is not needed here as the data_ls is a list of dataFrames of length k. """
+    """ Function to visualize the Subject Similarity Matrix """
     # Create a window
     window = tk.Tk()
     title_txt = "Visualization of Top-%s Latent Semantics as subject-weight pairs" % str(k)
@@ -399,6 +400,113 @@ def visualize_ss_matrix(ss_ls, k):
     ls_count = 1
     """ ls_list is a list of tuples of (images, scores) """
     for ls_list in ss_ls.values:
+        ls_label = tk.Label(frame.scrollable_frame, text='Latent Semantic %s' % ls_count)
+        ls_label.grid(row=v_row, column=ftr_col, columnspan=2)
+        """ After displaying the latent semantic label up the current row value. """
+        v_row += 1
+        row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+        feature_id = tk.Label(row, text="Subject Identifier", width=15)
+        score_id = tk.Label(row, text="Subject Score", width=15)
+        row.grid(row=v_row, column=ftr_col, columnspan=2)
+        feature_id.grid(row=v_row, column=ftr_col)
+        score_id.grid(row=v_row, column=lbl_col)
+        """ After adding identifier labels up the current row value. """
+        v_row += 1
+        for feature, score in ls_list:
+            data_row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+            feature_label = tk.Label(data_row, text=str(feature), width=14)
+            score_label = tk.Label(data_row, text=str(round(score, 8)), width=16)
+            data_row.grid(row=v_row, column=ftr_col, columnspan=2)
+            feature_label.grid(row=v_row, column=ftr_col)
+            score_label.grid(row=v_row, column=lbl_col)
+            """ After adding the image thumbnail and score up the current row value. """
+            v_row += 1
+
+        """ After going through each list reset the row back to 0, and up the Latent Semantic count by 1
+            Also increase the image column and label column each by 2. """
+        v_row = 0
+        ls_count += 1
+        ftr_col += 2
+        lbl_col += 2
+
+    frame.pack(expand=True, fill='both')
+    window.mainloop()
+
+
+def visualize_img_space(k, img_space):
+    print("Visualizing Image Space")
+    photos = []
+
+    # Create a window
+    window = tk.Tk()
+    title_txt = "Visualization of Top-%s Latent Semantics in the Image-space" % str(k)
+    window.title(title_txt)
+
+    frame = VSF(window, imgspace_width, data_ls_height)
+
+    v_row = 0
+    img_col = 0
+    lbl_col = 1
+    ls_count = 1
+    p_count = 0
+    """ ls_list is a list of tuples of (images, scores) """
+    for ls_list in img_space.values:
+        ls_label = tk.Label(frame.scrollable_frame, text='Latent Semantic %s' % ls_count)
+        ls_label.grid(row=v_row, column=img_col, columnspan=2)
+        """ After displaying the latent semantic label up the current row value. """
+        v_row += 1
+        for img, score in ls_list:
+            row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+            tn_img = create_thumbnail(img)
+            # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
+            height, width, no_channels = tn_img.shape
+            # Create a canvas that can fit the above image
+            canvas = tk.Canvas(row, width=width, height=height)
+            # Use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
+            photo = ImageTk.PhotoImage(image=Image.fromarray(tn_img))
+            photos.append(photo)
+            canvas.create_image(0, 0, image=photos[p_count], anchor=tk.NW)
+            """ Up the photo count by 1 so next image will be retrieved from the correct index """
+            p_count += 1
+            # print('Giving label %s to last image loaded' % img)
+            # print()
+            match_label = tk.Label(frame.scrollable_frame, text=img)
+            match_label.grid(row=v_row, column=img_col, columnspan=2)
+            """ After displaying the label of the image to be displayed up the current row value. """
+            v_row += 1
+            label = tk.Label(row, text=str(round(score, 8)))
+            row.grid(row=v_row, column=img_col, columnspan=2)
+            canvas.grid(row=v_row, column=img_col)
+            label.grid(row=v_row, column=lbl_col)
+            """ After adding the image thumbnail and score up the current row value. """
+            v_row += 1
+
+        """ After going through each list reset the row back to 0, and up the Latent Semantic count by 1
+            Also increase the image column and label column each by 2. """
+        v_row = 0
+        ls_count += 1
+        img_col += 2
+        lbl_col += 2
+
+    frame.pack(expand=True, fill='both')
+    window.mainloop()
+
+
+def visualize_metadata_space(k, metadata_space):
+    print("Visualizing Metadata Space")
+    # Create a window
+    window = tk.Tk()
+    title_txt = "Visualization of Top-%s Latent Semantics in the Metadata-space" % str(k)
+    window.title(title_txt)
+
+    frame = HSF(window, metadata_width, ftr_ls_height)
+
+    v_row = 0
+    ftr_col = 0
+    lbl_col = 1
+    ls_count = 1
+    """ ls_list is a list of tuples of (images, scores) """
+    for ls_list in metadata_space.values:
         ls_label = tk.Label(frame.scrollable_frame, text='Latent Semantic %s' % ls_count)
         ls_label.grid(row=v_row, column=ftr_col, columnspan=2)
         """ After displaying the latent semantic label up the current row value. """
