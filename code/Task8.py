@@ -72,7 +72,7 @@ def performNMF(metaDataFrame, k, imageList, featureList):
         arr.sort(key=lambda x: x[1], reverse=True)
         print("Printing latent Semantic {} in image-space:".format(i + 1))
         print(arr)
-        img_space.append(arr)
+        img_space.append(arr[:50])
     img_space = pd.DataFrame(img_space)
     print(img_space.shape)
     vz.visualize_img_space(k, img_space)

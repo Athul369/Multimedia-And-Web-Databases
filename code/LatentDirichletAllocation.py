@@ -112,7 +112,7 @@ class LDA(object):
         count = 0
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, '')
+        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, '')
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
@@ -218,7 +218,7 @@ class LDA(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
-        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, label_str)
+        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -432,5 +432,5 @@ class LDA(object):
             classification['Gender:'] = 'Male'
             print("male")
 
-        vz.visualize_classified_image(tail, classification, dr_name, model_name)
+        vz.visualize_classified_image(tail, classification, dr_name, model_name, k)
 

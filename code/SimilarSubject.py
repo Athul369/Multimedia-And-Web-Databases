@@ -231,7 +231,7 @@ class Subject(object):
             if params > 0:
                 simMat[sub_list.index(subjectId)][sub_list.index(key)] = abs(mx/params)
 
-    def rescaleToBasis(arr):
+    def rescaleToBasis(self, arr):
         np.seterr(divide='ignore', invalid='ignore')
         row_magnitude = np.sqrt(np.sum(np.square(arr), axis=1))
         rescaled_array = np.divide(arr, row_magnitude[:, None])

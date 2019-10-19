@@ -56,7 +56,7 @@ def create_thumbnail(img_id):
     return tn_img
 
 
-def visualize_matching_images(q_img, images_data, m, technique, fm, label):
+def visualize_matching_images(q_img, images_data, k, m, technique, fm, label):
     photos = []
     imgdata_to_visualize = []
     # Create a window
@@ -65,6 +65,13 @@ def visualize_matching_images(q_img, images_data, m, technique, fm, label):
     if label != '':
         title_txt = title_txt + ' and label: ' + label
     window.title(title_txt)
+    """ Add an additional Label to display number of Latent Semantics"""
+    row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+    cur_row = 0
+    ls_lbl = tk.Label(row, text='Using Top-%s Latent Semantics' % str(k))
+    row.grid(row=cur_row, column=0, columnspan=2)
+    ls_lbl.grid(row=cur_row, column=0, columnspan=2)
+    cur_row += 1
     q_header = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
     q_lbl = tk.Label(q_header, text='Query Image')
     q_name = tk.Label(q_header, text='Query Image ID')
@@ -152,7 +159,8 @@ def visualize_data_ls(data_ls, technique, fm, label):
 
     # Create a window
     window = tk.Tk()
-    title_txt = "Visualization of Data-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm)
+    k = len(data_ls.values)
+    title_txt = "Visualization of Top-%s Data-Latent Semantics for %s with %s Feature Descriptors" % (k, technique, fm)
     if label != '':
         title_txt = title_txt + ' and label: ' + label
     window.title(title_txt)
@@ -212,7 +220,8 @@ def visualize_feature_ls(feature_ls, technique, fm, label):
         Note k value is not needed here as the data_ls is a list of dataFrames of length k. """
     # Create a window
     window = tk.Tk()
-    title_txt = "Visualization of Feature-Latent Semantics for %s with %s Feature Descriptors" % (technique, fm)
+    k = len(feature_ls.values)
+    title_txt = "Visualization of Top-%s Feature-Latent Semantics for %s with %s Feature Descriptors" % (k, technique, fm)
     if label != '':
         title_txt = title_txt + ' and label: ' + label
     window.title(title_txt)
@@ -258,7 +267,7 @@ def visualize_feature_ls(feature_ls, technique, fm, label):
     window.mainloop()
 
 
-def visualize_classified_image(q_img, classification, technique, fm):
+def visualize_classified_image(q_img, classification, technique, fm, k):
     window = tk.Tk()
     title_txt = "Classification of Unlabeled Query Image for %s with %s Feature Descriptors" % (technique, fm)
     window.title(title_txt)
@@ -266,7 +275,7 @@ def visualize_classified_image(q_img, classification, technique, fm):
     q_lbl = tk.Label(q_header, text='Query Image')
     q_name = tk.Label(q_header, text='Query Image ID')
     """ rowspan set to 4 as that is the max count of rows for classification data."""
-    q_header.grid(row=0, column=0, columnspan=2, rowspan=4)
+    q_header.grid(row=0, column=0, columnspan=2, rowspan=5)
     q_lbl.grid(row=0, column=0)
     q_name.grid(row=0, column=1)
     # q_row = tk.Frame(window)
@@ -284,6 +293,12 @@ def visualize_classified_image(q_img, classification, technique, fm):
     cur_row = 0
     lbl_col = 2
     val_col = 3
+    """ Add an additional Label to display number of Latent Semantics"""
+    row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+    ls_lbl = tk.Label(row, text='Using Top-%s Latent Semantics' % str(k))
+    row.grid(row=cur_row, column=lbl_col, columnspan=2)
+    ls_lbl.grid(row=cur_row, column=lbl_col, columnspan=2)
+    cur_row += 1
     for label, value in classification.items():
         row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
         c_label = tk.Label(row, text=label, width=15)

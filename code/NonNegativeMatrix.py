@@ -87,7 +87,7 @@ class NM_F(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, '')
+        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, '')
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -216,7 +216,7 @@ class NM_F(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
-        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, label_str)
+        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -334,7 +334,7 @@ class NM_F(object):
             classification['Gender:'] = 'Male'
             print("male")
 
-        vz.visualize_classified_image(tail, classification, dr_name, model_name)
+        vz.visualize_classified_image(tail, classification, dr_name, model_name, k)
 
     def rescaleToBasis(arr):
         np.seterr(divide='ignore', invalid='ignore')

@@ -120,6 +120,11 @@ svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 10)
 # query 4
 svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 30)
 
+nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 10)
+nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 30)
+svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "SIFT", 10)
+svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "SIFT", 30)
+
 pca1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
 lda1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
         # lda1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
