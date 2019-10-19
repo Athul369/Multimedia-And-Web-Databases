@@ -5,13 +5,13 @@ import numpy as np
 from sklearn.decomposition import NMF
 import Visualizer as vz
 
-k_value = input('Enter Value for k: ')
-
-def metadataRead(filepath, imagepath):
+def metadataRead(filepath, imagepath, k):
     metadataFile = pd.read_csv(filepath, sep=',', header=None)
     metadataFile = metadataFile.iloc[1:]
+    # metadataFile.columns = ['id', 'age', 'gender', 'skinColor', 'accessories', 'nailPolish', 'aspectOfHand',
+    #                         'imageName', 'irregularities']
     metadataFile.columns = ['id', 'age', 'gender', 'skinColor', 'accessories', 'nailPolish', 'aspectOfHand',
-                            'imageName', 'irregularities']
+                            'Orientation', 'imageName', 'irregularities']
     # print(metadataFile)
     imageList = []
     a = 0
@@ -22,26 +22,33 @@ def metadataRead(filepath, imagepath):
     metadataFile = metadataFile[metadataFile['imageName'].isin(imageList)]
     # print(metadataFile)
     # print(a)
-    metadataFile[['aspect', 'orientation']] = metadataFile.aspectOfHand.str.split(expand=True)
+
+    # metadataFile[['aspect', 'orientation']] = metadataFile.aspectOfHand.str.split(expand=True)
+
     # print(metadataFile)
-    metadataFile = metadataFile[['imageName', 'aspect', 'orientation', 'gender', 'accessories']]
+    # metadataFile = metadataFile[['imageName', 'aspect', 'orientation', 'gender', 'accessories']]
+
+    metadataFile = metadataFile[['imageName', 'aspectOfHand', 'Orientation', 'gender', 'accessories']]
     # print(metadataFile)
-    convertToBinaryMatrix(metadataFile)
+    convertToBinaryMatrix(metadataFile, k)
 
 
-def convertToBinaryMatrix(metaDataFrame):
+def convertToBinaryMatrix(metaDataFrame, k):
     a = 0
-    metaDataFrame['orientation'] = metaDataFrame['orientation'].replace(['left', 'right'], [0, 1])
-    metaDataFrame['aspect'] = metaDataFrame['aspect'].replace(['dorsal', 'palmar'], [0, 1])
+    # metaDataFrame['orientation'] = metaDataFrame['orientation'].replace(['left', 'right'], [0, 1])
+    metaDataFrame['Orientation'] = metaDataFrame['Orientation'].replace(['left', 'right'], [0, 1])
+    # metaDataFrame['aspect'] = metaDataFrame['aspect'].replace(['dorsal', 'palmar'], [0, 1])
+    metaDataFrame['aspectOfHand'] = metaDataFrame['aspectOfHand'].replace(['dorsal', 'palmar'], [0, 1])
     metaDataFrame['gender'] = metaDataFrame['gender'].replace(['male', 'female'], [0, 1])
     # print(metaDataFrame)
     imageList = metaDataFrame['imageName'].tolist()
     # print(imageList)
-    metaDataFrame = metaDataFrame[['aspect', 'orientation', 'gender', 'accessories']]
+    # metaDataFrame = metaDataFrame[['aspect', 'orientation', 'gender', 'accessories']]
+    metaDataFrame = metaDataFrame[['aspectOfHand', 'Orientation', 'gender', 'accessories']]
     # print(metaDataFrame)
     metaDataFrame['accessories'] = metaDataFrame['accessories'].astype(int)
     featureList = metaDataFrame.columns
-    performNMF(metaDataFrame, int(k_value), imageList, featureList)
+    performNMF(metaDataFrame, k, imageList, featureList)
 
 
 def performNMF(metaDataFrame, k, imageList, featureList):
@@ -65,7 +72,7 @@ def performNMF(metaDataFrame, k, imageList, featureList):
         arr.sort(key=lambda x: x[1], reverse=True)
         print("Printing latent Semantic {} in image-space:".format(i + 1))
         print(arr)
-        img_space.append(arr[:50])
+        img_space.append(arr)
     img_space = pd.DataFrame(img_space)
     print(img_space.shape)
     vz.visualize_img_space(k, img_space)
@@ -98,6 +105,10 @@ def rescaleToBasis(arr):
 # "C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Hands"
 # imagedatapath = input("Enter Image Dataset Path: ")
 
-metadataRead(r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Metadata\HandInfo.csv",
-             r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Hands")
+# metadataRead(r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Metadata\HandInfo.csv",
+#              r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Hands")
+
+def run_task_8(k):
+    metadataRead(r"C:\Users\tyler\Desktop\phase2test\cse515_dataset_2\Dataset2\ImageMetadata.csv",
+                 r"C:\Users\tyler\Desktop\phase2test\cse515_dataset_2\Dataset2", k)
 

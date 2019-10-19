@@ -4,7 +4,8 @@ from SIFT import SIFT
 from SingularValueDecomposition import SVD
 from LatentDirichletAllocation import LDA
 from NonNegativeMatrix import NM_F
-from SimilarSubject import Subjects
+from SimilarSubject import Subject
+import Task8 as task8
 
 #md = SIFT("../Hands/Hand_0000002.jpg")
 
@@ -128,12 +129,12 @@ lda1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
 
 # task6
 # Query 1 Subject 27 and Query 2 Subject 55
-s1 = Subjects()
+s1 = Subject()
 s1.similar3Subjects('CM', 20, '27')
 s1.similar3Subjects('LBP', 20, '27')
-# s1.similar3Subjects('LBP', 20, '1000000')
-# s1.similar3Subjects('LBP', 20, '1011')
-# s1.similar3Subjects('LBP', 20, '1081')
+        # s1.similar3Subjects('LBP', 20, '1000000')
+        # s1.similar3Subjects('LBP', 20, '1011')
+        # s1.similar3Subjects('LBP', 20, '1081')
 s1.similar3Subjects('HOG', 20, '27')
 s1.similar3Subjects('SIFT', 20, '27')
 s1.similar3Subjects('CM', 20, '55')
@@ -150,3 +151,5 @@ s1.createSSMatrix(20)
 # task8
 # Create binary image-metadata matrix
 # Query 1 K value of 4 and Query 2 K value of 6
+task8.run_task_8(4)
+task8.run_task_8(6)
