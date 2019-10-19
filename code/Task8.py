@@ -10,7 +10,7 @@ def metadataRead(filepath, imagepath):
     metadataFile = metadataFile.iloc[1:]
     metadataFile.columns = ['id', 'age', 'gender', 'skinColor', 'accessories', 'nailPolish', 'aspectOfHand',
                             'imageName', 'irregularities']
-    print(metadataFile)
+    # print(metadataFile)
     imageList = []
     a = 0
     for image in glob.glob(os.path.join(imagepath, "*.jpg")):
@@ -18,12 +18,12 @@ def metadataRead(filepath, imagepath):
         imageList.append(image[-16:])
 
     metadataFile = metadataFile[metadataFile['imageName'].isin(imageList)]
-    print(metadataFile)
-    print(a)
+    # print(metadataFile)
+    # print(a)
     metadataFile[['aspect', 'orientation']] = metadataFile.aspectOfHand.str.split(expand=True)
-    print(metadataFile)
+    # print(metadataFile)
     metadataFile = metadataFile[['imageName', 'aspect', 'orientation', 'gender', 'accessories']]
-    print(metadataFile)
+    # print(metadataFile)
     convertToBinaryMatrix(metadataFile)
 
 
@@ -32,11 +32,11 @@ def convertToBinaryMatrix(metaDataFrame):
     metaDataFrame['orientation'] = metaDataFrame['orientation'].replace(['left', 'right'], [0, 1])
     metaDataFrame['aspect'] = metaDataFrame['aspect'].replace(['dorsal', 'palmar'], [0, 1])
     metaDataFrame['gender'] = metaDataFrame['gender'].replace(['male', 'female'], [0, 1])
-    print(metaDataFrame)
+    # print(metaDataFrame)
     imageList = metaDataFrame['imageName'].tolist()
-    print(imageList)
+    # print(imageList)
     metaDataFrame = metaDataFrame[['aspect', 'orientation', 'gender', 'accessories']]
-    print(metaDataFrame)
+    # print(metaDataFrame)
     metaDataFrame['accessories'] = metaDataFrame['accessories'].astype(int)
     featureList = metaDataFrame.columns
     performNMF(metaDataFrame, 20, imageList, featureList)
@@ -46,12 +46,12 @@ def performNMF(metaDataFrame, k, imageList, featureList):
     a = 0
     b = 0
     metaDataMatrix = metaDataFrame.to_numpy()
-    print(metaDataMatrix)
+    # print(metaDataMatrix)
     nmf_ = NMF(n_components=k, init='random', random_state=0)
     W = nmf_.fit_transform(metaDataMatrix)
     H = nmf_.components_
-    print(W)
-    print(H)
+    # print(W)
+    # print(H)
     W = rescaleToBasis(W)
     print("Top {} latent semantics in image-space".format(k))
     for i in range(k):
