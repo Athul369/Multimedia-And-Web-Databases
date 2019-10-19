@@ -303,8 +303,6 @@ class LDA(object):
     #     else:
     #         print("male")
 
-
-
     def ImageClassfication(self, imgLoc, model, k):
         model_name = model
         result = {}
