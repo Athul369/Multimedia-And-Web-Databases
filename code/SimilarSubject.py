@@ -11,7 +11,7 @@ imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
 
 
-class Subjects(object):
+class Subject(object):
 
     def kl(self, p, q):
         """Kullback-Leibler divergence D(P || Q) for discrete distributions
@@ -87,40 +87,60 @@ class Subjects(object):
                 params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
+                cnt = 0
+                mxb=0
                 for i in subject_dict[subjectId][0]:
                     for j in subject_dict[key][0]:
                         minKL = min(minKL, self.kl(dorsal_left_Desc_transformed[i], dorsal_left_Desc_transformed[j]))
                         #minKLCM = min(minKLCM, self.kl(dorsal_left_Desc_transformedCM[i], dorsal_left_Desc_transformedCM[j]))
+                    cnt+=1
+                    mxb+=minKL
+                minKL = mxb/cnt
                 mx += minKL
 
             if len(subject_dict[subjectId][1]) > 0 and len(subject_dict[key][1]) > 0:
                 params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
+                cnt = 0
+                mxb = 0
                 for i in subject_dict[subjectId][1]:
                     for j in subject_dict[key][1]:
                         minKL = min(minKL, self.kl(dorsal_right_Desc_transformed[i], dorsal_right_Desc_transformed[j]))
                         #minKLCM = min(minKLCM, self.kl(dorsal_right_Desc_transformedCM[i], dorsal_right_Desc_transformedCM[j]))
+                    cnt += 1
+                    mxb += minKL
+                minKL = mxb / cnt
                 mx += minKL
 
             if len(subject_dict[subjectId][2]) > 0 and len(subject_dict[key][2]) > 0:
                 params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
+                cnt = 0
+                mxb = 0
                 for i in subject_dict[subjectId][2]:
                     for j in subject_dict[key][2]:
                         minKL = min(minKL, self.kl(palmar_left_Desc_transformed[i], palmar_left_Desc_transformed[j]))
                         #minKLCM = min(minKLCM, self.kl(palmar_left_Desc_transformedCM[i], palmar_left_Desc_transformedCM[j]))
+                    cnt += 1
+                    mxb += minKL
+                minKL = mxb / cnt
                 mx += minKL
 
             if len(subject_dict[subjectId][3]) > 0 and len(subject_dict[key][3]) > 0:
                 params += 1
                 minKL = 10000000000
                 minKLCM = 10000000000
+                cnt = 0
+                mxb = 0
                 for i in subject_dict[subjectId][3]:
                     for j in subject_dict[key][3]:
                         minKL = min(minKL, self.kl(palmar_right_Desc_transformed[i], palmar_right_Desc_transformed[j]))
                         #minKLCM = min(minKLCM, self.kl(palmar_right_Desc_transformedCM[i], palmar_right_Desc_transformedCM[j]))
+                    cnt += 1
+                    mxb += minKL
+                minKL = mxb / cnt
                 mx += minKL
 
             if params > 0:
@@ -209,7 +229,7 @@ class Subjects(object):
                 mx += minKL
 
             if params > 0:
-                simMat[sub_list.index(subjectId)][sub_list.index(key)] = mx/params
+                simMat[sub_list.index(subjectId)][sub_list.index(key)] = abs(mx/params)
 
     def rescaleToBasis(self, arr):
         a = 0
