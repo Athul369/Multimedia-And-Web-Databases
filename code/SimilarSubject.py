@@ -218,6 +218,7 @@ class Subjects(object):
         return rescaled_array
 
     def createSSMatrix(self, k):
+        num_ls = k
         sub_list = []
         sub_count = imagedb.subjects.find().count()
         #print(sub_count)
@@ -230,10 +231,12 @@ class Subjects(object):
 
         #print(simMat)
         df = pd.DataFrame(simMat)
-        df.to_csv("../output/Sub2SubMatrix.csv", index=False, header=False)
+        df.to_csv("../output_old/Sub2SubMatrix.csv", index=False, header=False)
         nm = NMF(k)
         W = nm.fit_transform(simMat)
         Mat = self.rescaleToBasis(W)
+
+        visualizeArr = []
 
         for i in range(k):
             col = Mat[:, i]
@@ -241,8 +244,10 @@ class Subjects(object):
             for k, val in enumerate(col):
                 arr.append((str(sub_list[k]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
-            print("Printing term-weight pair for latent Symantic {}:".format(i + 1))
+            print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
+            """ Append the sorted array for each latent semantic """
+            visualizeArr.append(arr)
 
-
-
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_ss_matrix(visualizeArr, num_ls)

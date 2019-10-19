@@ -15,6 +15,7 @@ ls_width = 1125
 subj_width = 1300
 data_ls_height = 780
 ftr_ls_height = 225
+subject_ls_height = 500
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 
@@ -377,6 +378,55 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
             s_count += 1
             """ Reset the row to 0 after each subject finishes."""
             subj_row = 0
+
+    frame.pack(expand=True, fill='both')
+    window.mainloop()
+
+
+def visualize_ss_matrix(ss_ls, k):
+    """ Function to visualize the Feature to Latent Semantics Matrix.
+            Note k value is not needed here as the data_ls is a list of dataFrames of length k. """
+    # Create a window
+    window = tk.Tk()
+    title_txt = "Visualization of Top-%s Latent Semantics as subject-weight pairs" % str(k)
+    window.title(title_txt)
+
+    frame = HSF(window, ls_width, subject_ls_height)
+
+    v_row = 0
+    ftr_col = 0
+    lbl_col = 1
+    ls_count = 1
+    """ ls_list is a list of tuples of (images, scores) """
+    for ls_list in ss_ls.values:
+        ls_label = tk.Label(frame.scrollable_frame, text='Latent Semantic %s' % ls_count)
+        ls_label.grid(row=v_row, column=ftr_col, columnspan=2)
+        """ After displaying the latent semantic label up the current row value. """
+        v_row += 1
+        row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+        feature_id = tk.Label(row, text="Subject Identifier", width=15)
+        score_id = tk.Label(row, text="Subject Score", width=15)
+        row.grid(row=v_row, column=ftr_col, columnspan=2)
+        feature_id.grid(row=v_row, column=ftr_col)
+        score_id.grid(row=v_row, column=lbl_col)
+        """ After adding identifier labels up the current row value. """
+        v_row += 1
+        for feature, score in ls_list:
+            data_row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+            feature_label = tk.Label(data_row, text=str(feature), width=14)
+            score_label = tk.Label(data_row, text=str(score), width=16)
+            data_row.grid(row=v_row, column=ftr_col, columnspan=2)
+            feature_label.grid(row=v_row, column=ftr_col)
+            score_label.grid(row=v_row, column=lbl_col)
+            """ After adding the image thumbnail and score up the current row value. """
+            v_row += 1
+
+        """ After going through each list reset the row back to 0, and up the Latent Semantic count by 1
+            Also increase the image column and label column each by 2. """
+        v_row = 0
+        ls_count += 1
+        ftr_col += 2
+        lbl_col += 2
 
     frame.pack(expand=True, fill='both')
     window.mainloop()
