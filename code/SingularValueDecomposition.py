@@ -31,18 +31,31 @@ class SVD(object):
         U, S, V = svd(feature_desc, full_matrices=False)
 
         visualizeArr = []
-
+        # code for data latent semantics visualizer
         for i in range(k):
             col = U[:, i]
             arr = []
-            for k, val in enumerate(col):
-                arr.append((str(img_list[k]), val))
+            for j, val in enumerate(col):
+                arr.append((str(img_list[j]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
             """ Only take the top 5 data objects to report for each latent semantic """
             visualizeArr.append(arr[:5])
             print("Printing term-weight pair for latent Semantic {}({}):".format(i + 1, S[i]))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
+
+        # code for feature latent semantics visualizer
+        feature_latentSemantics = {}
+        for l in range(k):
+            results = []
+            for descriptor in imagedb.image_models.find():
+                res = V[l] @ descriptor[model]
+                results.append((descriptor["_id"], res))
+            results.sort(key=lambda x: x[1], reverse=True)
+            feature_latentSemantics[l + 1] = results[0][0]
+
+        print(feature_latentSemantics)
+        
         vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
 
     def mSimilarImage(self, imgLoc, model, k, m):

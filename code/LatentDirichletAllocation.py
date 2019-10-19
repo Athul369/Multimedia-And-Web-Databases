@@ -35,19 +35,36 @@ class LDA(object):
         # for f in feature_desc_transformed:
         #     print(sum(f))
 
+        topics = lda_vb.components_
+        print(topics.shape)
+
         visualizeArr = []
 
+        # code for data latent semantics visualizer
         for i in range(k):
             col = feature_desc_transformed[:, i]
             arr = []
-            for k, val in enumerate(col):
-                arr.append((str(img_list[k]), val))
+            for j, val in enumerate(col):
+                arr.append((str(img_list[j]), val))
             arr.sort(key=lambda x: x[1], reverse=True)
             """ Only take the top 5 data objects to report for each latent semantic """
             visualizeArr.append(arr[:5])
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
+
+        # code for feature latent semantics visualizer
+        feature_latentSemantics = {}
+        for l in range(k):
+            results = []
+            for descriptor in imagedb.image_models.find():
+                res = topics[l] @ descriptor[model]
+                results.append((descriptor["_id"], res))
+            results.sort(key=lambda x: x[1], reverse=True)
+            feature_latentSemantics[l+1] = results[0][0]
+
+        print(feature_latentSemantics)
+
         vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
 
     def kl(self, p, q):
@@ -303,6 +320,8 @@ class LDA(object):
     #     else:
     #         print("male")
 
+
+
     def ImageClassfication(self, imgLoc, model, k):
         model_name = model
         result = {}
@@ -414,22 +433,4 @@ class LDA(object):
             print("male")
 
         vz.visualize_classified_image(tail, classification, dr_name, model_name)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

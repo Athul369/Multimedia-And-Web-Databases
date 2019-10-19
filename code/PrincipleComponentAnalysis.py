@@ -53,18 +53,32 @@ class PrincipleComponentAnalysis(object):
                 frame = pd.concat(frame, axis=1, sort=False)
 
         visualizeArr = []
-
+        # code for data latent semantics visualizer
         for i in range(k):
             col = frame.iloc[:, i]
             arr = []
-            for k, val in enumerate(col):
-                arr.append((k, val))
+            for j, val in enumerate(col):
+                arr.append((j, val))
             arr.sort(key=lambda x: x[1], reverse=True)
             """ Only take the top 5 data objects to report for each latent semantic """
             visualizeArr.append(arr[:5])
             print("Printing term-weight pair for latent Semantic L{}:".format(i + 1))
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
+
+        feat_latent = np.transpose(eig_vecs)
+        # code for feature latent semantics visualizer
+        feature_latentSemantics = {}
+        for l in range(k):
+            results = []
+            for descriptor in imagedb.image_models.find():
+                res = feat_latent[l] @ descriptor[model]
+                results.append((descriptor["_id"], res))
+            results.sort(key=lambda x: x[1], reverse=True)
+            feature_latentSemantics[l+1] = results[0][0]
+
+        print(feature_latentSemantics)
+
         vz.visualize_feature_ls(visualizeArr, dr_name, model_name, '')
 
 
