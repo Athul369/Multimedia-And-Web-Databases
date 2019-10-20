@@ -66,6 +66,8 @@ class PrincipleComponentAnalysis(object):
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
 
+        vz.visualize_feature_ls(visualizeArr, dr_name, model_name, '')
+
         feat_latent = np.transpose(eig_vecs)
         # code for feature latent semantics visualizer
         feature_latentSemantics = {}
@@ -78,8 +80,8 @@ class PrincipleComponentAnalysis(object):
             feature_latentSemantics[l+1] = results[0][0]
 
         print(feature_latentSemantics)
+        vz.visualize_ftr_ls_hdp(feature_latentSemantics, dr_name, model_name)
 
-        vz.visualize_feature_ls(visualizeArr, dr_name, model_name, '')
 
 
     def mSimilarImage(self, imgLoc, model, k, m):

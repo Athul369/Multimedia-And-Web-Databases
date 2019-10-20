@@ -53,6 +53,8 @@ class LDA(object):
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
 
+        vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
+
         # code for feature latent semantics visualizer
         feature_latentSemantics = {}
         for l in range(k):
@@ -64,8 +66,7 @@ class LDA(object):
             feature_latentSemantics[l+1] = results[0][0]
 
         print(feature_latentSemantics)
-
-        vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
+        vz.visualize_ftr_ls_hdp(feature_latentSemantics, dr_name, model_name)
 
     def kl(self, p, q):
         """Kullback-Leibler divergence D(P || Q) for discrete distributions

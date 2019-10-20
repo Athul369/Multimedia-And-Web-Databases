@@ -16,6 +16,8 @@ imgspace_width = 1300
 ls_width = 1125
 subj_width = 1300
 data_ls_height = 780
+ftr_hdp_width =1350
+ftr_hdp_height = 650
 ftr_ls_height = 225
 subject_ls_height = 850
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
@@ -262,6 +264,78 @@ def visualize_feature_ls(feature_ls, technique, fm, label):
         ls_count += 1
         ftr_col += 2
         lbl_col += 2
+
+    frame.pack(expand=True, fill='both')
+    window.mainloop()
+
+
+def visualize_ftr_ls_hdp(feature_ls, technique, fm):
+    """ Function to visualize the Feature to Latent Semantics of Images with Highest Dot Product. """
+    photos = []
+
+    vis_dict = {}
+
+    # Create a window
+    window = tk.Tk()
+    if technique != 'NMF':
+        k = len(feature_ls.items())
+        vis_dict = feature_ls
+    else:
+        k = len(feature_ls)
+        for i in range(k):
+            vis_dict[str(i + 1)] = feature_ls[i][0]
+
+    title_txt = "Visualization of Top-%s Feature-Latent Semantics for %s with %s Feature Descriptors" % (k, technique, fm)
+    window.title(title_txt)
+
+    frame = VSF(window, ftr_hdp_width, ftr_hdp_height)
+
+    v_row = 0
+    img_col = 0
+    hdp_label = tk.Label(frame.scrollable_frame, text='Displaying Images with Highest Dot Product to each of the Top-'
+                                                      '%s Latent Semantics' % str(k))
+    hdp_label.grid(row=v_row, column=img_col, columnspan=10)
+    cur_row = 1
+    img_lbl_col = 1
+    p_count = 0
+
+    """ feature_ls is a dictionary containing Latent Semantic numbers and image with HDP to that latent semantic """
+    for ls, img in vis_dict.items():
+        """ v_row should be always at whatever the value of cur_row is at. """
+        v_row = cur_row
+
+        ls_label = tk.Label(frame.scrollable_frame, text='Latent Semantic %s' % ls)
+        ls_label.grid(row=v_row, column=img_col, columnspan=2)
+        """ After displaying the latent semantic label up the current row value. """
+        v_row += 1
+
+        row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+        tn_img = create_thumbnail(img)
+        # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
+        height, width, no_channels = tn_img.shape
+        # Create a canvas that can fit the above image
+        canvas = tk.Canvas(row, width=width, height=height)
+        # Use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
+        photo = ImageTk.PhotoImage(image=Image.fromarray(tn_img))
+        photos.append(photo)
+        canvas.create_image(0, 0, image=photos[p_count], anchor=tk.NW)
+        """ Up the photo count by 1 so next image will be retrieved from the correct index """
+        p_count += 1
+        # print('Giving label %s to last image loaded' % img)
+        # print()
+        row.grid(row=v_row, column=img_col, columnspan=2)
+        canvas.grid(row=v_row, column=img_col)
+        match_label = tk.Label(row, text=img)
+        match_label.grid(row=v_row, column=img_lbl_col)
+
+        img_col += 2
+        img_lbl_col += 2
+        """ If we have 5 images go ahead and reset img_col to 0 so if more images occur we can display
+            those images in the following row. Also increase the row by 2. Skipping over label and image """
+        if p_count % 5 == 0:
+            cur_row += 2
+            img_col = 0
+            img_lbl_col = 1
 
     frame.pack(expand=True, fill='both')
     window.mainloop()

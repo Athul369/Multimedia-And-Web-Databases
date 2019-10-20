@@ -5,7 +5,7 @@ from SingularValueDecomposition import SVD
 from LatentDirichletAllocation import LDA
 from NonNegativeMatrix import NM_F
 from SimilarSubject import Subject
-import Task8 as task8
+# from Task8 import Task8
 
 #md = SIFT("../Hands/Hand_0000002.jpg")
 
@@ -103,7 +103,7 @@ nmf1.mSimilarImage_Label("./phase2_Images/Hand_0000200.jpg", "palmar", "LBP", 30
 # query 3
 svd1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
 # query 4
-svd1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
+svd1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 30)
 
         # nmf1.mSimilarImage_Label("./phase2_Images/Hand_0011160.jpg", "Access", "SIFT", 10, 10)
 
@@ -156,5 +156,6 @@ s1.createSSMatrix(20)
 # task8
 # Create binary image-metadata matrix
 # Query 1 K value of 4 and Query 2 K value of 6
-task8.run_task_8(4)
-task8.run_task_8(6)
+# task8 = Task8()
+# task8.run_task_8(4)
+# task8.run_task_8(6)

@@ -50,6 +50,7 @@ class NM_F(object):
 
         feature_latentsemantics_visualizer = NM_F.feature_latent_product(feature_desc, H, img_list)
         print(feature_latentsemantics_visualizer)
+        vz.visualize_ftr_ls_hdp(feature_latentsemantics_visualizer, dr_name, model_name)
 
     def mSimilarImage(self, imgLoc, model, k, m):
         model_name = model
