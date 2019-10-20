@@ -367,6 +367,6 @@ class NM_F(object):
                 maxDict[image_list[j]] = np.dot(latMat[i], featMat[j])
 
             maximum = max(maxDict, key=maxDict.get)
-            visualizerDict.append((maximum, maxDict[maximum]))
+            visualizerDict.append((i+1,maximum))
 
         return visualizerDict
