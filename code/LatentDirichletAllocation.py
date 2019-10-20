@@ -157,8 +157,21 @@ class LDA(object):
         print(len(img_list))
         lda = LatentDirichletAllocation(k, max_iter=25)
         feature_desc_transformed = lda.fit_transform(feature_desc)
-        # TODO: Determine how this is to be visualized.
-        return feature_desc_transformed
+
+        visualizeArr = []
+        for i in range(k):
+            col = feature_desc_transformed[:, i]
+            arr = []
+            for j, val in enumerate(col):
+                arr.append((str(img_list[j]), val))
+            arr.sort(key=lambda x: x[1], reverse=True)
+            """ Only take the top 5 data objects to report for each latent semantic """
+            visualizeArr.append(arr[:5])
+            print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
+            print(arr)
+
+        visualizeArr = pd.DataFrame(visualizeArr)
+        vz.visualize_data_ls(visualizeArr, dr_name, model_name, label)
 
     def mSimilarImage_Label(self, imgLoc, label, model, k, m):
         model_name = model

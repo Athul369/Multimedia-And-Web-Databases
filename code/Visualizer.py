@@ -429,7 +429,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
         if s_count < 3:
             subj_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
             subject_lbl = tk.Label(subj_holder, text='Similar Subject #%s: %s' % (subject_num, subject))
-            subject_score = tk.Label(subj_holder, text='Score: %s' % str(round(score, 8)))
+            subject_score = tk.Label(subj_holder, text='Score: %s' % str(score)) # (round(score, 12)))
             subj_holder.grid(row=subj_row, column=s_img_col, columnspan=2, rowspan=5)
             subject_lbl.grid(row=subj_row, column=s_img_col)
             subject_score.grid(row=subj_row, column=s_id_col)
