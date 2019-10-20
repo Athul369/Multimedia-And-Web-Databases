@@ -46,7 +46,7 @@ class NM_F(object):
         vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
         print(W)
 
-        #####Feature discriptor and latent space dot product . below "feature_latent_product" functions returns a array
+        # Feature descriptor and latent space dot product. "feature_latent_product" function returns a dictionary
 
         feature_latentsemantics_visualizer = NM_F.feature_latent_product(feature_desc, H, img_list)
         print(feature_latentsemantics_visualizer)
@@ -359,7 +359,7 @@ class NM_F(object):
 
     def feature_latent_product(featMat, latMat, image_list):
         a = 0
-        visualizerDict = []
+        visualizerDict = {}
         for i in range(len(latMat)):
             maxDict = {}
 
@@ -367,6 +367,6 @@ class NM_F(object):
                 maxDict[image_list[j]] = np.dot(latMat[i], featMat[j])
 
             maximum = max(maxDict, key=maxDict.get)
-            visualizerDict.append((i+1,maximum))
+            visualizerDict[str(i+1)] = maximum
 
         return visualizerDict

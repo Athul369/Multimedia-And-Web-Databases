@@ -129,8 +129,10 @@ def visualize_matching_images(q_img, images_data, k, m, technique, fm, label):
             canvas.create_image(0, 0, image=photos[count], anchor=tk.NW)
             # print('Giving label %s to last image loaded' % key)
             # print()
+            img_match_lbl = tk.Label(window, text='Related Image #%s' % str(count + 1))
             match_label = tk.Label(window, text=key)
-            match_label.grid(row=cur_row, column=img_col, columnspan=2)
+            img_match_lbl.grid(row=cur_row, column=img_col)
+            match_label.grid(row=cur_row, column=score_col)
             """ After displaying the label of the image to be displayed up the current row value. """
             cur_row += 1
             label = tk.Label(row, text=str(value))
@@ -273,17 +275,9 @@ def visualize_ftr_ls_hdp(feature_ls, technique, fm):
     """ Function to visualize the Feature to Latent Semantics of Images with Highest Dot Product. """
     photos = []
 
-    vis_dict = {}
-
     # Create a window
     window = tk.Tk()
-    if technique != 'NMF':
-        k = len(feature_ls.items())
-        vis_dict = feature_ls
-    else:
-        k = len(feature_ls)
-        for i in range(k):
-            vis_dict[str(i + 1)] = feature_ls[i][0]
+    k = len(feature_ls.items())
 
     title_txt = "Visualization of Top-%s Feature-Latent Semantics for %s with %s Feature Descriptors" % (k, technique, fm)
     window.title(title_txt)
@@ -300,7 +294,7 @@ def visualize_ftr_ls_hdp(feature_ls, technique, fm):
     p_count = 0
 
     """ feature_ls is a dictionary containing Latent Semantic numbers and image with HDP to that latent semantic """
-    for ls, img in vis_dict.items():
+    for ls, img in feature_ls.items():
         """ v_row should be always at whatever the value of cur_row is at. """
         v_row = cur_row
 
