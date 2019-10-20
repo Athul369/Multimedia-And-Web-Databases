@@ -28,28 +28,28 @@ svd1.createKLatentSymantics("SIFT", 40)
 lda1.createKLatentSymantics("CM", 20)
 # query 4
 lda1.createKLatentSymantics("CM", 40)
-
-pca1.createPCA_KLatentSemantics("HOG", 10)
-pca1.createPCA_KLatentSemantics("HOG", 20)
-pca1.createPCA_KLatentSemantics("HOG", 30)
-pca1.createPCA_KLatentSemantics("HOG", 40)
+#
+# pca1.createPCA_KLatentSemantics("HOG", 10)
+# pca1.createPCA_KLatentSemantics("HOG", 20)
+# pca1.createPCA_KLatentSemantics("HOG", 30)
+# pca1.createPCA_KLatentSemantics("HOG", 40)
         # lda1.createKLatentSymantics("LBP", 20)
         # lda1.createKLatentSymantics("LBP", 10)
 
 
-lda1.createKLatentSymantics("CM", 30)
+# lda1.createKLatentSymantics("CM", 30)
 
         # svd1.createKLatentSymantics("LBP", 20)
         # svd1.createKLatentSymantics("LBP", 10)
 
-svd1.createKLatentSymantics("SIFT", 10)
-
-svd1.createKLatentSymantics("SIFT", 30)
+# svd1.createKLatentSymantics("SIFT", 10)
+#
+# svd1.createKLatentSymantics("SIFT", 30)
 
         # nmf1.createKLatentSymantics("LBP", 20)
 
-nmf1.createKLatentSymantics("LBP", 10)
-nmf1.createKLatentSymantics("LBP", 30)
+# nmf1.createKLatentSymantics("LBP", 10)
+# nmf1.createKLatentSymantics("LBP", 30)
 
 #task2
         # pca1.mSimilarImage("./phase2_Images/Hand_0000200.jpg", "LBP", 20, 10)
@@ -84,6 +84,8 @@ pca1.LabelLatentSemantic("dorsal", "HOG", 30)
 lda1.LabelLatentSemantic("left", "CM", 20)
 # query 4
 lda1.LabelLatentSemantic("left", "CM", 30)
+
+# svd1.LabelLatentSemantic('male', 'LBP', 30)
         # svd1.LabelLatentSemantic("dorsal", "HOG", 20)
         # svd1.LabelLatentSemantic("left", "CM", 20)
         # nmf1.LabelLatentSemantic("dorsal", "HOG", 20)
@@ -119,14 +121,14 @@ nmf1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 30)
 svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 10)
 # query 4
 svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 30)
-
-nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 10)
-nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 30)
-svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "SIFT", 10)
-svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "SIFT", 30)
-
-pca1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
-lda1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
+#
+# nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 10)
+# nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 30)
+# svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "SIFT", 10)
+# svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "SIFT", 30)
+#
+# pca1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
+# lda1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
         # lda1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 20)
         # svd1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
 
@@ -135,17 +137,28 @@ lda1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 20)
 # task6
 # Query 1 Subject 27 and Query 2 Subject 55
 s1 = Subject()
-s1.similar3Subjects('CM', 20, '27')
-s1.similar3Subjects('LBP', 20, '27')
+# s1.similar3Subjects('CM', 20, '27')
+# s1.similar3Subjects('LBP', 20, '27')
         # s1.similar3Subjects('LBP', 20, '1000000')
         # s1.similar3Subjects('LBP', 20, '1011')
         # s1.similar3Subjects('LBP', 20, '1081')
-s1.similar3Subjects('HOG', 20, '27')
+# s1.similar3Subjects('HOG', 20, '27')
 s1.similar3Subjects('SIFT', 20, '27')
-s1.similar3Subjects('CM', 20, '55')
-s1.similar3Subjects('LBP', 20, '55')
-s1.similar3Subjects('HOG', 20, '55')
+# s1.similar3Subjects('CM', 20, '55')
+# s1.similar3Subjects('LBP', 20, '55')
+# s1.similar3Subjects('HOG', 20, '55')
 s1.similar3Subjects('SIFT', 20, '55')
+
+# s1.similar3Subjects('LBP', 20, '1528')
+# s1.similar3Subjects('SIFT', 20, '1528')
+#
+# s1.similar3Subjects('LBP', 20, '9000000')
+# s1.similar3Subjects('SIFT', 20, '9000000')
+#
+# s1.similar3Subjects('LBP', 20, '1513')
+# s1.similar3Subjects('SIFT', 20, '1513')
+
+
 
 # task7
 # Subject to Subject similarity
