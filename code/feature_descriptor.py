@@ -1,22 +1,21 @@
 from LocalBinaryPatterns import LBP
-# from LocalBinaryPatternsModified import LBP
 from ColorMoments import CM
 from SIFT import SIFT
 from HOGmain import HOG
-import Constants as const
 import os
 import glob
 import pymongo
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
+import Constants as const
 
 # import dbtask
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
-
+cluster_centers = imagedb["centroids"]
 subjects = imagedb["subjects"]
 
 dict = {}
@@ -25,6 +24,7 @@ dict_subjects = {}
 
 
 def subjectMeta():
+    print("enter")
     subjectID = imagedb.ImageMetadata.distinct("SubjectID")
     for id in subjectID:
         dorsal_left = imagedb.ImageMetadata.find({"SubjectID": id, "aspectOfHand": "dorsal", "Orientation": "left"})
@@ -40,13 +40,12 @@ def subjectMeta():
         dict_subjects["dorsal_right"] = dorsal_right
         dict_subjects["palmar_left"] = palmar_left
         dict_subjects["palmar_right"] = palmar_right
+        print(dict_subjects)
         rec = imagedb.subjects.insert_one(dict_subjects)
 
 
 def createKMeans(model, k):
     feature_desc = None
-    field_name = "bag_"+model
-    imagedb.image_models.update({}, {"$unset": {field_name : 1}})
     for descriptor in imagedb.image_models.find():
         if feature_desc is None:
             feature_desc = pd.DataFrame(descriptor[model])
@@ -56,6 +55,10 @@ def createKMeans(model, k):
 
     feature_desc = feature_desc.values
     ret = KMeans(n_clusters=k, max_iter=1000).fit(feature_desc)
+    centers = ret.cluster_centers_
+    centroids_dict = {}
+    centroids_dict[model] = centers.tolist()
+    imagedb.centroids.insert_one(centroids_dict)
 
     for item in imagedb.image_models.find():
         img = pd.DataFrame(item[model])
@@ -75,7 +78,7 @@ def calculate_fd(path):
 
         md = CM(image)
         lst = md.getFeatureDescriptors()
-        #  print(lst)
+        print(lst)
         dict["CM"] = lst
 
         md = LBP(image)
