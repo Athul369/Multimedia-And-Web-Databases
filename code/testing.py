@@ -1,4 +1,4 @@
-from PrincipleComponentAnalysis import PrincipleComponentAnalysis
+from PrincipleComponentAnalysis import P_CA
 from ColorMoments import CM
 from SIFT import SIFT
 from SingularValueDecomposition import SVD
@@ -11,7 +11,7 @@ from SimilarSubject import Subject
 
 #md.createKMeans("../output/SIFT",30)
 
-pca1 = PrincipleComponentAnalysis()
+pca1 = P_CA()
 lda1 = LDA()
 svd1 = SVD()
 nmf1 = NM_F()
@@ -121,6 +121,9 @@ nmf1.ImageClassfication("./phase2_Images/Hand_0000111.jpg", "LBP", 30)
 svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 10)
 # query 4
 svd1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "SIFT", 30)
+
+# outside db
+nmf1.ImageClassfication(r"C:\Users\tyler\Documents\Xfer to ASU Google Drive\CSE 515\Project\11k Hands Data\Hands\Hand_0002182.jpg", "LBP", 10)
 #
 # nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 10)
 # nmf1.ImageClassfication("./phase2_Images/Hand_0001395.jpg", "LBP", 30)
@@ -143,11 +146,11 @@ s1 = Subject()
         # s1.similar3Subjects('LBP', 20, '1011')
         # s1.similar3Subjects('LBP', 20, '1081')
 # s1.similar3Subjects('HOG', 20, '27')
-s1.similar3Subjects('SIFT', 20, '27')
+s1.similar3Subjects('SIFT', 20, 27)
 # s1.similar3Subjects('CM', 20, '55')
 # s1.similar3Subjects('LBP', 20, '55')
 # s1.similar3Subjects('HOG', 20, '55')
-s1.similar3Subjects('SIFT', 20, '55')
+s1.similar3Subjects('SIFT', 20, 55)
 
 # s1.similar3Subjects('LBP', 20, '1528')
 # s1.similar3Subjects('SIFT', 20, '1528')
