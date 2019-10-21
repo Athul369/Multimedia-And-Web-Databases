@@ -7,6 +7,7 @@ import pandas as pd
 import pymongo
 import os
 import shutil
+import BOW_compute
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
@@ -167,10 +168,10 @@ class SVD(object):
         elif label == "Access" or label == "NoAccess":
             search = "accessories"
             if label == "Access":
-                label = '1'
+                label = 1
                 label_str = 'With Accessories'
             else:
-                label = '0'
+                label = 0
                 label_str = 'Without Accessories'
 
         elif label == "male" or label == "female":
@@ -225,7 +226,7 @@ class SVD(object):
             else:
                 break
 
-    def ImageClassfication(self, imgLoc, model, k):
+       def ImageClassfication(self, imgLoc, model, k):
         model_name = model
         result = {}
         model = "bag_" + model
@@ -234,6 +235,9 @@ class SVD(object):
         for descriptor in imagedb.image_models.find():
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
+
+        if len(query_desc) == 0:
+            query_desc = BOW_compute.BOW(imgLoc,model_name)
 
         Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
@@ -251,9 +255,9 @@ class SVD(object):
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = '1'
+                    label = 1
                 else:
-                    label = '0'
+                    label = 0
 
                 for descriptor in imagedb.ImageMetadata.find():
                     if descriptor[search] == label:
@@ -278,7 +282,7 @@ class SVD(object):
             svd = TruncatedSVD(k)
             svd_Obj = svd.fit(label_Desc)
             label_desc_transformed = svd_Obj.transform(label_Desc)
-            query_desc_transformed = svd_Obj.transform(query_desc)
+            query_desc_transformed = svd_Obj.transform(query_desc.reshape(1,len(query_desc)))
 
             dist = []
 
@@ -289,7 +293,11 @@ class SVD(object):
                 match_score = np.sqrt(euc_dis.sum())
                 dist.append(match_score)
 
-            result[label] = min(dist)
+            dist.sort()
+            num = int(len(dist)/5)
+            dist1 = dist[:num]
+            ln = len(dist1)
+            result[label] = sum(dist1)/ln
 
         classification = {}
 
@@ -320,7 +328,7 @@ class SVD(object):
             print(res[1])
             print(res[0])
 
-        if result['1'] > result['0']:
+        if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -334,4 +342,4 @@ class SVD(object):
             classification['Gender:'] = 'Male'
             print("male")
 
-        vz.visualize_classified_image(tail, classification, dr_name, model_name, k)
+        vz.visualize_classified_image(tail, classification, dr_name, model_name)
