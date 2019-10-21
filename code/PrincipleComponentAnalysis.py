@@ -67,6 +67,8 @@ class P_CA(object):
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
 
+        vz.visualize_feature_ls(visualizeArr, dr_name, model_name, '')
+
         feat_latent = np.transpose(eig_vecs)
         # code for feature latent semantics visualizer
         feature_latentSemantics = {}
@@ -80,7 +82,7 @@ class P_CA(object):
 
         print(feature_latentSemantics)
 
-        vz.visualize_feature_ls(visualizeArr, dr_name, model_name, '')
+        vz.visualize_ftr_ls_hdp(feature_latentSemantics, dr_name, model_name)
 
 
     def mSimilarImage(self, imgLoc, model, k, m):
@@ -116,7 +118,7 @@ class P_CA(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, '')
+        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, '')
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -250,7 +252,7 @@ class P_CA(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
-        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, label_str)
+        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))

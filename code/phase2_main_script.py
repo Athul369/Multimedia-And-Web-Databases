@@ -3,7 +3,8 @@ import os
 import glob
 import shutil
 from os.path import isfile, join
-
+import pandas as pd
+import Constants as const
 from LocalBinaryPatterns import LBP
 from ColorMoments import CM
 from SIFT import SIFT
@@ -32,7 +33,7 @@ parser.add_argument('-t', '--taskid',type=int, dest="taskid", help="Provide the 
 
 args = parser.parse_args()
 
-if not 0 <= args.taskid <=9:
+if not 0 <= args.taskid <= 9:
     print("Please provide valid task Id using option -t OR --taskid")
     exit(1)
 
@@ -75,12 +76,12 @@ if task_id == 0:
         exit(1)
     path = args.dir
     calculate_fd(path)
-    #Creating Bags for each model and saving into Database
+    # Creating Bags for each model and saving into Database
     createKMeans("CM", 40)
     createKMeans("SIFT", 40)
     createKMeans("LBP", 40)
     createKMeans("HOG", 40)
-    #Creating Meta data csv file
+    # Creating Meta data csv file
     meta_file = os.path.join("..", "csv","HandInfo.csv")
     onlyfiles = [f for f in os.listdir(path) if isfile(join(path, f))]
     df = pd.read_csv(meta_file)
@@ -90,7 +91,7 @@ if task_id == 0:
             orient = row["aspectOfHand"].split(" ")
             meta_data.append([row["id"], row["age"], row["gender"], row["skinColor"], row["accessories"], row["nailPolish"],orient[0], orient[1], row["imageName"]])
 
-    df1 = pd.DataFrame(meta_data,columns=["SubjectID", "age", "gender", "skinColor", "accessories", "nailPolish", "aspectOfHand","Orientation", "imageName"], index=None)
+    df1 = pd.DataFrame(meta_data,columns=["SubjectID", "age", "gender", "skinColor", "accessories", "nailPolish", "aspectOfHand", "Orientation", "imageName"], index=None)
     csv_path = os.path.join("..", "csv", "ImageMetadata.csv")
     df1.to_csv(csv_path, index=None)
     try:
@@ -101,23 +102,23 @@ if task_id == 0:
     subjectMeta()
     exit(0)
 
-elif task_id ==1:
+elif task_id == 1:
     teq.createKLatentSymantics(model, k)
     exit(0)
-elif task_id ==2:
+elif task_id == 2:
     if args.imageid == "None":
         print("Please provide ImageID")
         exit(1)
     image = args.imageid
     teq.mSimilarImage(image, model, k, m)
     exit(0)
-elif task_id ==3:
+elif task_id == 3:
     if args.label == "None":
         print("Please provide Label")
         exit(1)
     teq.LabelLatentSemantic(args.label, model, k)
     exit(0)
-elif task_id ==4:
+elif task_id == 4:
     if args.imageid == "None":
         print("Please provide ImageID")
         exit(1)
@@ -127,7 +128,7 @@ elif task_id ==4:
     image = args.imageid
     teq.mSimilarImage_Label(image, args.label, model, k, m)
     exit(0)
-elif task_id ==5:
+elif task_id == 5:
     if args.dir == "None":
         print("Please provide directory name")
         exit(1)
@@ -138,7 +139,7 @@ elif task_id ==5:
     teq.ImageClassfication(image, model,k)
     exit(0)
 
-elif task_id ==6:
+elif task_id == 6:
     if args.subject == -1:
         print("Please provide proper subject id")
         exit(1)
@@ -146,12 +147,12 @@ elif task_id ==6:
     sub.similar3Subjects("SIFT", 20, args.subject)
     exit(0)
 
-elif task_id ==7:
+elif task_id == 7:
     sub = Subject()
     sub.createSSMatrix(k)
     exit(0)
 
-elif task_id ==8:
+elif task_id == 8:
     t8 = Task8()
     csv_path = os.path.join("..", "csc", "ImageMetadata.csv")
     t8.run_task_8()

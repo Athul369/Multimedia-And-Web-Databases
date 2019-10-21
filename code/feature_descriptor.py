@@ -101,9 +101,9 @@ def calculate_fd(path):
 
 
 # Main
+path = input("Enter Path: ")
 imagedb.image_models.drop()
 imagedb.subjects.drop()
-path = input("Enter Path: ")
 calculate_fd(path)
 
 createKMeans("CM", 40)
