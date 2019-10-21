@@ -1,6 +1,6 @@
 import glob
 import os
-import shutil
+import BOW_compute
 import pandas as pd
 import numpy as np
 import pymongo
@@ -46,7 +46,7 @@ class NM_F(object):
         vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
         print(W)
 
-        # Feature descriptor and latent space dot product. "feature_latent_product" function returns a dictionary
+        #####Feature discriptor and latent space dot product . below "feature_latent_product" functions returns a array
 
         feature_latentsemantics_visualizer = NM_F.feature_latent_product(feature_desc, H, img_list)
         print(feature_latentsemantics_visualizer)
@@ -164,10 +164,10 @@ class NM_F(object):
         elif label == "Access" or label == "NoAccess":
             search = "accessories"
             if label == "Access":
-                label = '1'
+                label = 1
                 label_str = 'With Accessories'
             else:
-                label = '0'
+                label = 0
                 label_str = 'Without Accessories'
 
         elif label == "male" or label == "female":
@@ -232,9 +232,15 @@ class NM_F(object):
         model = "bag_" + model
         head, tail = os.path.split(imgLoc)
         query_desc = []
+        flag = False
         for descriptor in imagedb.image_models.find():
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
+                flag = True
+
+        if len(query_desc) == 0:
+            query_desc = BOW_compute.BOW(imgLoc, model_name)
+
 
         Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
@@ -242,19 +248,23 @@ class NM_F(object):
             label_Desc = []
             desc_img_list = []
             imageslist_Meta = []
-
+            id = -1
             if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
                 for subject in imagedb.subjects.find():
                     for img in subject[label]:
                         label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                         desc_img_list.append(img)
+                        if (img == tail):
+                            id = len(desc_img_list) -1
+
+
 
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = '1'
+                    label = 1
                 else:
-                    label = '0'
+                    label = 0
 
                 for descriptor in imagedb.ImageMetadata.find():
                     if descriptor[search] == label:
@@ -264,6 +274,8 @@ class NM_F(object):
                     if descriptor["_id"] in imageslist_Meta:
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
+                        if (img == tail):
+                            id = len(desc_img_list) -1
 
             elif label == "male" or label == "female":
                 search = "gender"
@@ -275,18 +287,25 @@ class NM_F(object):
                     if descriptor["_id"] in imageslist_Meta:
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
+                        if (img == tail):
+                            id = len(desc_img_list) -1
+
+            if not flag:
+                label_Desc.append(query_desc)
+                desc_img_list.append(tail)
+                id = len(desc_img_list) -1
 
             nmf_ = NMF(n_components=k, init='random', random_state=0)
-            lda_Obj = nmf_.fit(label_Desc)
-            label_desc_transformed = lda_Obj.transform(label_Desc)
-            query_desc_transformed = lda_Obj.transform(query_desc)
+            nmf_Obj = nmf_.fit(label_Desc)
+            label_desc_transformed = nmf_Obj.transform(label_Desc)
+
 
             dist = []
 
             for i, db_desc in enumerate(label_desc_transformed):
                 if desc_img_list[i] == tail:
                     continue
-                euc_dis = np.square(np.subtract(db_desc, query_desc_transformed))
+                euc_dis = np.square(np.subtract(db_desc, label_desc_transformed[id]))
                 match_score = np.sqrt(euc_dis.sum())
                 dist.append(match_score)
 
@@ -321,7 +340,7 @@ class NM_F(object):
             print(res[1])
             print(res[0])
 
-        if result['1'] > result['0']:
+        if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -359,7 +378,7 @@ class NM_F(object):
 
     def feature_latent_product(featMat, latMat, image_list):
         a = 0
-        visualizerDict = {}
+        visualizerDict = []
         for i in range(len(latMat)):
             maxDict = {}
 
@@ -367,6 +386,6 @@ class NM_F(object):
                 maxDict[image_list[j]] = np.dot(latMat[i], featMat[j])
 
             maximum = max(maxDict, key=maxDict.get)
-            visualizerDict[str(i+1)] = maximum
+            visualizerDict.append((maximum, maxDict[maximum]))
 
         return visualizerDict

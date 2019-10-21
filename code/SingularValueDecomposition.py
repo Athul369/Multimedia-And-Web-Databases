@@ -15,7 +15,6 @@ mydb = imagedb["image_models"]
 meta = imagedb["ImageMetadata"]
 dr_name = 'SVD'
 
-
 class SVD(object):
 
     def createKLatentSymantics(self, model, k):
@@ -45,8 +44,6 @@ class SVD(object):
             print(arr)
         visualizeArr = pd.DataFrame(visualizeArr)
 
-        vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
-
         # code for feature latent semantics visualizer
         feature_latentSemantics = {}
         for l in range(k):
@@ -58,9 +55,8 @@ class SVD(object):
             feature_latentSemantics[l + 1] = results[0][0]
 
         print(feature_latentSemantics)
-        vz.visualize_ftr_ls_hdp(feature_latentSemantics, dr_name, model_name)
 
-
+        vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
 
     def mSimilarImage(self, imgLoc, model, k, m):
         model_name = model
@@ -95,7 +91,7 @@ class SVD(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, '')
+        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, '')
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -217,7 +213,7 @@ class SVD(object):
         # os.mkdir(res_dir)
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
-        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, label_str)
+        vz.visualize_matching_images(tail, rank_dict, m, dr_name, model_name, label_str)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -226,18 +222,21 @@ class SVD(object):
             else:
                 break
 
-       def ImageClassfication(self, imgLoc, model, k):
+    def ImageClassfication(self, imgLoc, model, k):
         model_name = model
         result = {}
         model = "bag_" + model
         head, tail = os.path.split(imgLoc)
         query_desc = []
+        flag = False
         for descriptor in imagedb.image_models.find():
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
+                flag = True
 
         if len(query_desc) == 0:
-            query_desc = BOW_compute.BOW(imgLoc,model_name)
+            query_desc = BOW_compute.BOW(imgLoc, model_name)
+
 
         Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
@@ -245,12 +244,16 @@ class SVD(object):
             label_Desc = []
             desc_img_list = []
             imageslist_Meta = []
-
+            id = -1
             if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
                 for subject in imagedb.subjects.find():
                     for img in subject[label]:
                         label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                         desc_img_list.append(img)
+                        if (img == tail):
+                            id = len(desc_img_list) -1
+
+
 
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
@@ -267,6 +270,8 @@ class SVD(object):
                     if descriptor["_id"] in imageslist_Meta:
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
+                        if (img == tail):
+                            id = len(desc_img_list) -1
 
             elif label == "male" or label == "female":
                 search = "gender"
@@ -278,18 +283,25 @@ class SVD(object):
                     if descriptor["_id"] in imageslist_Meta:
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
+                        if (img == tail):
+                            id = len(desc_img_list) -1
+
+            if not flag:
+                label_Desc.append(query_desc)
+                desc_img_list.append(tail)
+                id = len(desc_img_list) -1
 
             svd = TruncatedSVD(k)
             svd_Obj = svd.fit(label_Desc)
             label_desc_transformed = svd_Obj.transform(label_Desc)
-            query_desc_transformed = svd_Obj.transform(query_desc.reshape(1,len(query_desc)))
+
 
             dist = []
 
             for i, db_desc in enumerate(label_desc_transformed):
                 if desc_img_list[i] == tail:
                     continue
-                euc_dis = np.square(np.subtract(db_desc, query_desc_transformed))
+                euc_dis = np.square(np.subtract(db_desc, label_desc_transformed[id]))
                 match_score = np.sqrt(euc_dis.sum())
                 dist.append(match_score)
 
@@ -342,4 +354,4 @@ class SVD(object):
             classification['Gender:'] = 'Male'
             print("male")
 
-        vz.visualize_classified_image(tail, classification, dr_name, model_name)
+        vz.visualize_classified_image(tail, classification, dr_name, model_name,k)

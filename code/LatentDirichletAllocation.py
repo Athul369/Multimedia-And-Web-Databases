@@ -7,7 +7,7 @@ import os
 import shutil
 import Visualizer as vz
 import Constants as const
-from sklearn.metrics.pairwise import cosine_similarity
+import BOW_compute
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
@@ -29,12 +29,6 @@ class LDA(object):
             img_list.append(descriptor["_id"])
 
         feature_desc_transformed = lda_vb.fit_transform(feature_desc)
-        #U, S, V = lda_vb(feature_desc, full_matrices=False)
-        #S = lda_vb.components_
-
-        # for f in feature_desc_transformed:
-        #     print(sum(f))
-
         topics = lda_vb.components_
         print(topics.shape)
 
@@ -102,8 +96,6 @@ class LDA(object):
                 continue
 
             match_score = self.kl( feature_desc_transformed[i], feature_desc_transformed[id])
-            #euc_dis = np.square(np.subtract(feature_desc_transformed[id], feature_desc_transformed[i]))
-            # match_score = cosine_similarity(feature_desc_transformed[id].reshape(1,-1), feature_desc_transformed[i].reshape(1,-1))
             rank_dict[img_list[i]] = match_score
 
         # res_dir = os.path.join('..', 'output', model[4:], 'match')
@@ -170,8 +162,6 @@ class LDA(object):
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
 
-        visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, dr_name, model_name, label)
 
     def mSimilarImage_Label(self, imgLoc, label, model, k, m):
         model_name = model
@@ -342,9 +332,15 @@ class LDA(object):
         model = "bag_" + model
         head, tail = os.path.split(imgLoc)
         query_desc = []
+        flag = False
         for descriptor in imagedb.image_models.find():
             if descriptor["_id"] == tail:
                 query_desc.append(descriptor[model])
+                flag = True
+
+        if len(query_desc) == 0:
+            query_desc = BOW_compute.BOW(imgLoc, model_name)
+
 
         Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
 
@@ -352,19 +348,23 @@ class LDA(object):
             label_Desc = []
             desc_img_list = []
             imageslist_Meta = []
-
+            id = -1
             if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
                 for subject in imagedb.subjects.find():
                     for img in subject[label]:
-                        label_Desc.append(imagedb.image_models.find({"_id":img})[0][model])
+                        label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
                         desc_img_list.append(img)
+                        if (img == tail):
+                            id = len(desc_img_list) -1
+
+
 
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
-                    label = '1'
+                    label = 1
                 else:
-                    label = '0'
+                    label = 0
 
                 for descriptor in imagedb.ImageMetadata.find():
                     if descriptor[search] == label:
@@ -374,6 +374,8 @@ class LDA(object):
                     if descriptor["_id"] in imageslist_Meta:
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
+                        if (img == tail):
+                            id = len(desc_img_list) -1
 
             elif label == "male" or label == "female":
                 search = "gender"
@@ -385,21 +387,27 @@ class LDA(object):
                     if descriptor["_id"] in imageslist_Meta:
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
+                        if (img == tail):
+                            id = len(desc_img_list) -1
 
+            if not flag:
+                label_Desc.append(query_desc)
+                desc_img_list.append(tail)
+                id = len(desc_img_list) -1
 
 
             lda_dl = LatentDirichletAllocation(k, max_iter=25)
             lda_Obj = lda_dl.fit(label_Desc)
             label_desc_transformed = lda_Obj.transform(label_Desc)
-            query_desc_transformed = lda_Obj.transform(query_desc)
 
             dist = []
 
             for i, db_desc in enumerate(label_desc_transformed):
                 if desc_img_list[i] == tail:
                     continue
-                match_score = self.kl(db_desc, query_desc_transformed)
+                match_score = self.kl(db_desc, label_desc_transformed[id])
                 dist.append(match_score)
+
 
             result[label] = min(dist)
 
@@ -432,7 +440,7 @@ class LDA(object):
             print(res[1])
             print(res[0])
 
-        if result['1'] > result['0']:
+        if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
         else:
@@ -447,4 +455,3 @@ class LDA(object):
             print("male")
 
         vz.visualize_classified_image(tail, classification, dr_name, model_name, k)
-
