@@ -101,13 +101,13 @@ def calculate_fd(path):
 
 
 # Main
-path = input("Enter Path: ")
-imagedb.image_models.drop()
-imagedb.subjects.drop()
-calculate_fd(path)
-
-createKMeans("CM", 40)
-createKMeans("HOG", 40)
-createKMeans("SIFT", 40)
-createKMeans("LBP", 40)
-subjectMeta()
+# path = input("Enter Path: ")
+# imagedb.image_models.drop()
+# imagedb.subjects.drop()
+# calculate_fd(path)
+#
+# createKMeans("CM", 40)
+# createKMeans("HOG", 40)
+# createKMeans("SIFT", 40)
+# createKMeans("LBP", 40)
+# subjectMeta()

@@ -15,7 +15,7 @@ from SingularValueDecomposition import SVD
 from LatentDirichletAllocation import LDA
 from SimilarSubject import Subject
 from Task8 import Task8
-from feature_descriptor import *
+import feature_descriptor as fd
 
 #Parsing the command line arguments
 parser = argparse.ArgumentParser()
@@ -41,19 +41,20 @@ task_id = args.taskid
 model = args.model
 technique = args.technique
 
-md = None
-if model == "CM":
-    md = CM()
-elif model == "SIFT":
-    md = SIFT()
-elif model == "LBP":
-    md = LBP()
-elif model == "HOG":
-    md = HOG()
-else:
-    print("Please provide proper model name")
-    exit(1)
-
+# Not needed or used elsewhere.
+# md = None
+# if model == "CM":
+#     md = CM()
+# elif model == "SIFT":
+#     md = SIFT()
+# elif model == "LBP":
+#     md = LBP()
+# elif model == "HOG":
+#     md = HOG()
+# else:
+#     print("Please provide proper model name")
+#     exit(1)
+#
 teq = None
 if technique == "SVD":
     teq = SVD()
@@ -75,12 +76,12 @@ if task_id == 0:
         print("Please provide directory name")
         exit(1)
     path = args.dir
-    calculate_fd(path)
+    fd.calculate_fd(path)
     # Creating Bags for each model and saving into Database
-    createKMeans("CM", 40)
-    createKMeans("SIFT", 40)
-    createKMeans("LBP", 40)
-    createKMeans("HOG", 40)
+    fd.createKMeans("CM", 40)
+    fd.createKMeans("SIFT", 40)
+    fd.createKMeans("LBP", 40)
+    fd.createKMeans("HOG", 40)
     # Creating Meta data csv file
     meta_file = os.path.join("..", "csv","HandInfo.csv")
     onlyfiles = [f for f in os.listdir(path) if isfile(join(path, f))]
@@ -99,7 +100,7 @@ if task_id == 0:
     except:
         print("Could not execute import DB operation properly, please do it again if required.")
 
-    subjectMeta()
+    fd.subjectMeta()
     exit(0)
 
 elif task_id == 1:
@@ -154,8 +155,8 @@ elif task_id == 7:
 
 elif task_id == 8:
     t8 = Task8()
-    csv_path = os.path.join("..", "csc", "ImageMetadata.csv")
-    t8.run_task_8()
+    csv_path = os.path.join("..", "csv", "ImageMetadata.csv")
+    t8.run_task_8(csv_path, k)
     exit(0)
 
 
