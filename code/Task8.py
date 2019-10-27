@@ -13,7 +13,7 @@ class Task8(object):
         # metadataFile.columns = ['id', 'age', 'gender', 'skinColor', 'accessories', 'nailPolish', 'aspectOfHand',
         #                         'imageName', 'irregularities']
         metadataFile.columns = ['id', 'age', 'gender', 'skinColor', 'accessories', 'nailPolish', 'aspectOfHand',
-                                'Orientation', 'imageName', 'irregularities']
+                                'Orientation', 'imageName']
 
         metadataFile = metadataFile[['imageName', 'aspectOfHand', 'Orientation', 'gender', 'accessories']]
         # print(metadataFile)
@@ -81,4 +81,4 @@ class Task8(object):
         self.metadataRead(metadatacsvpath, k)
 
 # t8=Task8()
-# t8.run_task_8(r"C:\Users\shadab\Documents\MWDB\project\ImageMetadata.csv",6)
+# t8.run_task_8("../csv/ImageMetadata.csv",4)

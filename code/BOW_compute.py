@@ -11,7 +11,7 @@ imagedb = client["imagedb"]
 cluster_centers = imagedb["centroids"]
 
 def BOW(img_path, model):
-
+    print(img_path)
     if model == "CM":
         md = CM(img_path)
         lst = md.getFeatureDescriptors()
@@ -20,16 +20,16 @@ def BOW(img_path, model):
     elif model == "LBP":
         md = LBP(img_path)
         lst = md.getFeatureDescriptors()
-        label = 3
+        label = 2
     elif model == "SIFT":
         md = SIFT(img_path)
         lst = md.getFeatureDescriptors()
-        label = 2
+        label = 1
 
     elif model == "HOG":
         md = HOG(img_path)
         lst = md.getFeatureDescriptors()
-        label = 1
+        label = 3
 
     centers = imagedb.centroids.find()[label][model]
 

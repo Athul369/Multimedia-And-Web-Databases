@@ -5,6 +5,7 @@ import pymongo
 from sklearn.decomposition import NMF
 import Visualizer as vz
 import Constants as const
+import os
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
@@ -33,28 +34,23 @@ class Subject(object):
         dorsal_right_Desc = []
         palmar_left_Desc = []
         palmar_right_Desc = []
-        dorsal_left_DescCM = []
-        dorsal_right_DescCM = []
-        palmar_left_DescCM = []
-        palmar_right_DescCM = []
 
         for subject in imagedb.subjects.find():
             subject_dict[subject["_id"]] = [[] for i in range(4)]
             for img in subject["dorsal_left"]:
                 dorsal_left_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
-                #dorsal_left_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
                 subject_dict[subject["_id"]][0].append(len(dorsal_left_Desc) - 1)
+
             for img in subject["dorsal_right"]:
                 dorsal_right_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
-                #dorsal_right_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
                 subject_dict[subject["_id"]][1].append(len(dorsal_right_Desc) - 1)
+
             for img in subject["palmar_left"]:
                 palmar_left_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
-                #palmar_left_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
                 subject_dict[subject["_id"]][2].append(len(palmar_left_Desc) - 1)
+
             for img in subject["palmar_right"]:
                 palmar_right_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
-                #palmar_right_DescCM.append(imagedb.image_models.find({"_id": img})[0]["bag_CM"])
                 subject_dict[subject["_id"]][3].append(len(palmar_right_Desc) - 1)
 
         lda_dl = LatentDirichletAllocation(k, max_iter=25)
@@ -66,16 +62,6 @@ class Subject(object):
         dorsal_right_Desc_transformed = lda_dr.fit_transform(dorsal_right_Desc)
         palmar_left_Desc_transformed = lda_pl.fit_transform(palmar_left_Desc)
         palmar_right_Desc_transformed = lda_pr.fit_transform(palmar_right_Desc)
-
-        # lda_dlcm = LatentDirichletAllocation(k, max_iter=25)
-        # lda_drcm = LatentDirichletAllocation(k, max_iter=25)
-        # lda_plcm = LatentDirichletAllocation(k, max_iter=25)
-        # lda_prcm = LatentDirichletAllocation(k, max_iter=25)
-        #
-        # dorsal_left_Desc_transformedCM = lda_dlcm.fit_transform(dorsal_left_DescCM)
-        # dorsal_right_Desc_transformedCM = lda_drcm.fit_transform(dorsal_right_DescCM)
-        # palmar_left_Desc_transformedCM = lda_plcm.fit_transform(palmar_left_DescCM)
-        # palmar_right_Desc_transformedCM = lda_prcm.fit_transform(palmar_right_DescCM)
 
         score_dict = {}
         for key in subject_dict:
@@ -92,7 +78,6 @@ class Subject(object):
                 for i in subject_dict[subjectId][0]:
                     for j in subject_dict[key][0]:
                         minKL = min(minKL, self.kl(dorsal_left_Desc_transformed[i], dorsal_left_Desc_transformed[j]))
-                        #minKLCM = min(minKLCM, self.kl(dorsal_left_Desc_transformedCM[i], dorsal_left_Desc_transformedCM[j]))
                     cnt+=1
                     mxb+=minKL
                 minKL = mxb/cnt
@@ -101,13 +86,11 @@ class Subject(object):
             if len(subject_dict[subjectId][1]) > 0 and len(subject_dict[key][1]) > 0:
                 params += 1
                 minKL = 10000000000
-                minKLCM = 10000000000
                 cnt = 0
                 mxb = 0
                 for i in subject_dict[subjectId][1]:
                     for j in subject_dict[key][1]:
                         minKL = min(minKL, self.kl(dorsal_right_Desc_transformed[i], dorsal_right_Desc_transformed[j]))
-                        #minKLCM = min(minKLCM, self.kl(dorsal_right_Desc_transformedCM[i], dorsal_right_Desc_transformedCM[j]))
                     cnt += 1
                     mxb += minKL
                 minKL = mxb / cnt
@@ -116,13 +99,11 @@ class Subject(object):
             if len(subject_dict[subjectId][2]) > 0 and len(subject_dict[key][2]) > 0:
                 params += 1
                 minKL = 10000000000
-                minKLCM = 10000000000
                 cnt = 0
                 mxb = 0
                 for i in subject_dict[subjectId][2]:
                     for j in subject_dict[key][2]:
                         minKL = min(minKL, self.kl(palmar_left_Desc_transformed[i], palmar_left_Desc_transformed[j]))
-                        #minKLCM = min(minKLCM, self.kl(palmar_left_Desc_transformedCM[i], palmar_left_Desc_transformedCM[j]))
                     cnt += 1
                     mxb += minKL
                 minKL = mxb / cnt
@@ -131,13 +112,11 @@ class Subject(object):
             if len(subject_dict[subjectId][3]) > 0 and len(subject_dict[key][3]) > 0:
                 params += 1
                 minKL = 10000000000
-                minKLCM = 10000000000
                 cnt = 0
                 mxb = 0
                 for i in subject_dict[subjectId][3]:
                     for j in subject_dict[key][3]:
                         minKL = min(minKL, self.kl(palmar_right_Desc_transformed[i], palmar_right_Desc_transformed[j]))
-                        #minKLCM = min(minKLCM, self.kl(palmar_right_Desc_transformedCM[i], palmar_right_Desc_transformedCM[j]))
                     cnt += 1
                     mxb += minKL
                 minKL = mxb / cnt
@@ -250,8 +229,9 @@ class Subject(object):
             self.similarSubjectsAssignment("SIFT", k, subject, simMat, sub_list)
 
         #print(simMat)
-        # df = pd.DataFrame(simMat)
-        # df.to_csv("../output_old/Sub2SubMatrix.csv", index=False, header=False)
+        df = pd.DataFrame(simMat)
+        csv_path = os.path.join("..", "csv", "Sub2SubMatrix.csv")
+        df.to_csv(csv_path, index=False, header=False)
         nm = NMF(k)
         W = nm.fit_transform(simMat)
         Mat = self.rescaleToBasis(W)

@@ -115,6 +115,7 @@ class LDA(object):
             else:
                 break
 
+
     def LabelLatentSemantic(self, label, model, k):
         model_name = model
         model = "bag_" + model
@@ -161,8 +162,6 @@ class LDA(object):
             print("Printing term-weight pair for latent Semantic {}:".format(i + 1))
             print(arr)
 
-        visualizeArr = pd.DataFrame(visualizeArr)
-        vz.visualize_data_ls(visualizeArr, dr_name, model_name, label)
 
     def mSimilarImage_Label(self, imgLoc, label, model, k, m):
         model_name = model
@@ -376,7 +375,7 @@ class LDA(object):
                         label_Desc.append(descriptor[model])
                         desc_img_list.append(descriptor["_id"])
                         if (img == tail):
-                            id = len(desc_img_list) - 1
+                            id = len(desc_img_list) -1
 
             elif label == "male" or label == "female":
                 search = "gender"
