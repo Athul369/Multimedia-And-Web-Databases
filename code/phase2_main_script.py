@@ -134,7 +134,8 @@ elif task_id ==5:
         print("Please provide ImageID")
         exit(1)
     image = os.path.join(args.dir,args.imageid)
-    shutil.copy(image, const.DB_IMG_PATH)
+    if not os.path.exists(os.path.join(const.DB_IMG_PATH, args.imageid)):
+        shutil.copy(image, const.DB_IMG_PATH)
     teq.ImageClassfication(image, model,k)
     exit(0)
 

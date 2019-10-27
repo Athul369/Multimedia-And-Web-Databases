@@ -341,24 +341,17 @@ class LDA(object):
         if len(query_desc) == 0:
             query_desc = BOW_compute.BOW(imgLoc, model_name)
 
-
-        Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
+        Labels = ["left", "right", "dorsal", "palmar", "Access", "NoAccess", "male", "female"]
 
         for label in Labels:
             label_Desc = []
             desc_img_list = []
             imageslist_Meta = []
             id = -1
-            if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
-                for subject in imagedb.subjects.find():
-                    for img in subject[label]:
-                        label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
-                        desc_img_list.append(img)
-                        if (img == tail):
-                            id = len(desc_img_list) -1
-
-
-
+            if label == "left" or label == "right":
+                search = "Orientation"
+            elif label == "dorsal" or label == "palmar":
+                search = "aspectOfHand"
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
@@ -366,29 +359,22 @@ class LDA(object):
                 else:
                     label = 0
 
-                for descriptor in imagedb.ImageMetadata.find():
-                    if descriptor[search] == label:
-                        imageslist_Meta.append(descriptor["imageName"])
-
-                for descriptor in imagedb.image_models.find():
-                    if descriptor["_id"] in imageslist_Meta:
-                        label_Desc.append(descriptor[model])
-                        desc_img_list.append(descriptor["_id"])
-                        if (img == tail):
-                            id = len(desc_img_list) -1
-
             elif label == "male" or label == "female":
                 search = "gender"
-                for descriptor in imagedb.ImageMetadata.find():
-                    if descriptor[search] == label:
-                        imageslist_Meta.append(descriptor["imageName"])
+            else:
+                print("Please provide correct label")
+                exit(1)
 
-                for descriptor in imagedb.image_models.find():
-                    if descriptor["_id"] in imageslist_Meta:
-                        label_Desc.append(descriptor[model])
-                        desc_img_list.append(descriptor["_id"])
-                        if (img == tail):
-                            id = len(desc_img_list) -1
+            for descriptor in imagedb.ImageMetadata.find():
+                if descriptor[search] == label:
+                    imageslist_Meta.append(descriptor["imageName"])
+                # print(len(imageslist_Meta))
+            for descriptor in imagedb.image_models.find():
+                if descriptor["_id"] in imageslist_Meta:
+                    if descriptor["_id"] == tail:
+                        continue
+                    label_Desc.append(descriptor[model])
+                    desc_img_list.append(descriptor["_id"])
 
             if not flag:
                 label_Desc.append(query_desc)
@@ -413,33 +399,19 @@ class LDA(object):
 
         classification = {}
 
-        if result["dorsal_left"] > result["dorsal_right"]:
-            semi_final1 = result["dorsal_right"]
-            conclusion1 = "dorsal_right"
+        if result["palmar"] > result["dorsal"]:
+            classification['Aspect of Hand:'] = "dorsal"
+            print("dorsal")
         else:
-            semi_final1 = result["dorsal_left"]
-            conclusion1 = "dorsal_left"
+            classification['Aspect of Hand:'] = "palmar"
+            print("palmar")
 
-        if result["palmar_left"] > result["palmar_right"]:
-            semi_final2 = result["palmar_right"]
-            conclusion2 = "palmar_right"
+        if result["left"] > result["right"]:
+            classification['Orientation:'] = "right"
+            print("right")
         else:
-            semi_final2 = result["palmar_left"]
-            conclusion2 = "palmar_left"
-
-        if semi_final1 > semi_final2:
-            res = conclusion2.split("_")
-            classification['Aspect of Hand:'] = res[0]
-            classification['Orientation:'] = res[1]
-            print(res[1])
-            print(res[0])
-        else:
-            res = conclusion1.split("_")
-            classification['Aspect of Hand:'] = res[0]
-            classification['Orientation:'] = res[1]
-            print(res[1])
-            print(res[0])
-
+            classification['Orientation:'] = "left"
+            print("left")
         if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
