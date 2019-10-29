@@ -3,6 +3,8 @@ import os
 import glob
 import shutil
 from os.path import isfile, join
+import pandas as pd
+import Constants as const
 
 from LocalBinaryPatterns import LBP
 from ColorMoments import CM
@@ -31,7 +33,7 @@ parser.add_argument('-t', '--taskid',type=int, dest="taskid", help="Provide the 
 
 args = parser.parse_args()
 
-if not 0 <= args.taskid <=9:
+if not 0 <= args.taskid <= 9:
     print("Please provide valid task Id using option -t OR --taskid")
     exit(1)
 
@@ -76,9 +78,9 @@ if task_id == 0:
     calculate_fd(path)
     #Creating Bags for each model and saving into Database
     createKMeans("CM", 40)
+    createKMeans("HOG", 40)
     createKMeans("SIFT", 40)
     createKMeans("LBP", 40)
-    createKMeans("HOG", 40)
     #Creating Meta data csv file
     meta_file = os.path.join("..", "csv","HandInfo.csv")
     onlyfiles = [f for f in os.listdir(path) if isfile(join(path, f))]

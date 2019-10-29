@@ -20,16 +20,16 @@ def BOW(img_path, model):
     elif model == "LBP":
         md = LBP(img_path)
         lst = md.getFeatureDescriptors()
-        label = 2
+        label = 3
     elif model == "SIFT":
         md = SIFT(img_path)
         lst = md.getFeatureDescriptors()
-        label = 1
+        label = 2
 
     elif model == "HOG":
         md = HOG(img_path)
         lst = md.getFeatureDescriptors()
-        label = 3
+        label = 1
 
     centers = imagedb.centroids.find()[label][model]
 

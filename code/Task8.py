@@ -41,6 +41,10 @@ class Task8(object):
         H = nmf_.components_
 
         W = self.rescaleToBasis(W)
+        print("Image space")
+        print(W)
+        print("Metadata Space")
+        print(H)
         img_space = []
         print("Top {} latent semantics in image-space".format(k))
         for i in range(k):

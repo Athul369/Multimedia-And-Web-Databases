@@ -46,9 +46,9 @@ class NM_F(object):
         vz.visualize_data_ls(visualizeArr, dr_name, model_name, '')
         print(W)
 
-        #####Feature discriptor and latent space dot product . below "feature_latent_product" functions returns a array
+        # Feature descriptor and latent space dot product. "feature_latent_product" function returns a dictionary
 
-        feature_latentsemantics_visualizer = NM_F.feature_latent_product(feature_desc, H, img_list)
+        feature_latentsemantics_visualizer = NM_F.feature_latent_product(self, feature_desc, H, img_list)
         print(feature_latentsemantics_visualizer)
         vz.visualize_ftr_ls_hdp(feature_latentsemantics_visualizer, dr_name, model_name)
 
@@ -63,6 +63,7 @@ class NM_F(object):
             img_list.append(descriptor["_id"])
         nmf_ = NMF(n_components=k)
         W = nmf_.fit_transform(feature_desc)
+        print(W)
         H = nmf_.components_
 
         head, tail = os.path.split(imgLoc)
@@ -133,6 +134,7 @@ class NM_F(object):
         nmf_ = NMF(n_components=k, init='random', random_state=0)
 
         feature_desc_transformed = nmf_.fit_transform(feature_desc)
+        print(feature_desc_transformed)
         # H = nmf_.components_
         W = NM_F.rescaleToBasis(feature_desc_transformed)
 
@@ -187,7 +189,7 @@ class NM_F(object):
             if descriptor[search] == label:
                 imageslist_Meta.append(descriptor["imageName"])
 
-        print(len(imageslist_Meta))
+        # print(len(imageslist_Meta))
 
         for descriptor in imagedb.image_models.find():
             if descriptor["_id"] in imageslist_Meta:
@@ -195,6 +197,7 @@ class NM_F(object):
                 img_list.append(descriptor["_id"])
 
         feature_desc_transformed = nmf_.fit_transform(feature_desc)
+        print(feature_desc_transformed)
 
         head, tail = os.path.split(imgLoc)
 
@@ -238,20 +241,23 @@ class NM_F(object):
                 query_desc.append(descriptor[model])
                 flag = True
 
+        Labels = ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right", "Access", "NoAccess", "male", "female"]
+
         if len(query_desc) == 0:
             query_desc = BOW_compute.BOW(imgLoc, model_name)
-
-        Labels = ["left", "right", "dorsal", "palmar", "Access", "NoAccess", "male", "female"]
 
         for label in Labels:
             label_Desc = []
             desc_img_list = []
             imageslist_Meta = []
             id = -1
-            if label == "left" or label == "right":
-                search = "Orientation"
-            elif label == "dorsal" or label == "palmar":
-                search = "aspectOfHand"
+
+            if label in ["dorsal_left", "dorsal_right", "palmar_left", "palmar_right"]:
+                for subject in imagedb.subjects.find():
+                    for img in subject[label]:
+                        label_Desc.append(imagedb.image_models.find({"_id": img})[0][model])
+                        desc_img_list.append(img)
+
             elif label == "Access" or label == "NoAccess":
                 search = "accessories"
                 if label == "Access":
@@ -259,32 +265,35 @@ class NM_F(object):
                 else:
                     label = 0
 
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
+                        imageslist_Meta.append(descriptor["imageName"])
+
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
+
             elif label == "male" or label == "female":
                 search = "gender"
-            else:
-                print("Please provide correct label")
-                exit(1)
+                for descriptor in imagedb.ImageMetadata.find():
+                    if descriptor[search] == label:
+                        imageslist_Meta.append(descriptor["imageName"])
 
-            for descriptor in imagedb.ImageMetadata.find():
-                if descriptor[search] == label:
-                    imageslist_Meta.append(descriptor["imageName"])
-                # print(len(imageslist_Meta))
-            for descriptor in imagedb.image_models.find():
-                if descriptor["_id"] in imageslist_Meta:
-                    if descriptor["_id"] == tail:
-                        continue
-                    label_Desc.append(descriptor[model])
-                    desc_img_list.append(descriptor["_id"])
+                for descriptor in imagedb.image_models.find():
+                    if descriptor["_id"] in imageslist_Meta:
+                        label_Desc.append(descriptor[model])
+                        desc_img_list.append(descriptor["_id"])
 
             if not flag:
                 label_Desc.append(query_desc)
                 desc_img_list.append(tail)
-                id = len(desc_img_list) -1
+                id = len(desc_img_list) - 1
 
             nmf_ = NMF(n_components=k, init='random', random_state=0)
-            nmf_Obj = nmf_.fit(label_Desc)
-            label_desc_transformed = nmf_Obj.transform(label_Desc)
-
+            lda_Obj = nmf_.fit(label_Desc)
+            label_desc_transformed = lda_Obj.transform(label_Desc)
+            # query_desc_transformed = lda_Obj.transform(query_desc)
 
             dist = []
 
@@ -299,19 +308,33 @@ class NM_F(object):
 
         classification = {}
 
-        if result["palmar"] > result["dorsal"]:
-            classification['Aspect of Hand:'] = "dorsal"
-            print("dorsal")
+        if result["dorsal_left"] > result["dorsal_right"]:
+            semi_final1 = result["dorsal_right"]
+            conclusion1 = "dorsal_right"
         else:
-            classification['Aspect of Hand:'] = "palmar"
-            print("palmar")
+            semi_final1 = result["dorsal_left"]
+            conclusion1 = "dorsal_left"
 
-        if result["left"] > result["right"]:
-            classification['Orientation:'] = "right"
-            print("right")
+        if result["palmar_left"] > result["palmar_right"]:
+            semi_final2 = result["palmar_right"]
+            conclusion2 = "palmar_right"
         else:
-            classification['Orientation:'] = "left"
-            print("left")
+            semi_final2 = result["palmar_left"]
+            conclusion2 = "palmar_left"
+
+        if semi_final1 > semi_final2:
+            res = conclusion2.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+        else:
+            res = conclusion1.split("_")
+            classification['Aspect of Hand:'] = res[0]
+            classification['Orientation:'] = res[1]
+            print(res[1])
+            print(res[0])
+
         if result[1] > result[0]:
             classification['Accessories:'] = 'Without Accessories'
             print("NoAccess")
@@ -350,7 +373,7 @@ class NM_F(object):
 
     def feature_latent_product(featMat, latMat, image_list):
         a = 0
-        visualizerDict = []
+        visualizerDict = {}
         for i in range(len(latMat)):
             maxDict = {}
 
@@ -358,6 +381,6 @@ class NM_F(object):
                 maxDict[image_list[j]] = np.dot(latMat[i], featMat[j])
 
             maximum = max(maxDict, key=maxDict.get)
-            visualizerDict.append((maximum, maxDict[maximum]))
+            visualizerDict[str(i + 1)] = maximum
 
         return visualizerDict
