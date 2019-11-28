@@ -1,7 +1,7 @@
 import math
 from collections import defaultdict
 from functools import reduce
-from pprint import pprint
+from sklearn.decomposition import TruncatedSVD
 
 from LocalBinaryPatterns import LBP
 from ColorMoments import CM
@@ -15,7 +15,7 @@ import pandas as pd
 
 SEED = 12
 np.random.seed(SEED)
-IMAGE_ID_COL = 'imageId'
+IMAGE_ID_COL = 'ImageId'
 import pymongo
 
 client = pymongo.MongoClient('localhost', 27017)
@@ -40,22 +40,16 @@ class LSH:
             hash_table : List of List of defaultdicts
             
         """
+        #print(img_vecs)
+        #print(type(img_vecs))
         hash_table = self.init_hash_table()
         nrows, ncols = img_vecs.shape[0], img_vecs.shape[1]
-        #print(hash_table)
-        #print(nrows)
         for i in range(nrows):
-            # print(vec)
-            img_id, img_vec = img_vecs.iloc[i, 0], np.array(img_vecs.iloc[i, 1:])
+            img_id, img_vec = img_vecs[i][-1], np.array(img_vecs[i][:-1])
             for idx, hash_vec in enumerate(hash_table):
-                #print(img_vec)
-                #print(img_vec.shape)
                 buckets = self.hash_obj.hash(img_vec, self.vec[idx], self.b[idx], self.w)
                 for i in range(len(buckets)):
                     hash_vec[i][buckets[i]].add(img_id)
-
-        if verbose:
-            pprint(hash_table)
         return hash_table
 
     def init_hash_table(self):
@@ -68,7 +62,7 @@ class LSH:
             hash_table.append(hash_layer)
         return hash_table
 
-    def find_ann(self, query_point, hash_table, k=5):
+    def find_ann(self, query_point, hash_table, k):
         candidate_imgs = set()
         num_conjunctions = self.num_hash
         for layer_idx, layer in enumerate(self.vec):
@@ -87,21 +81,21 @@ class LSH:
                 break
         if len(candidate_imgs) < k:
             if num_conjunctions > 1:
-                num_conjunctions -= 1
+                self.num_hash -= 1
                 print('Reduced number of hashes')
                 return self.find_ann(query_point, hash_table, k=k)
             else:
-                print('fubar')
+                print('Cannot reduce number of hashes')
         return candidate_imgs
 
     def post_process_filter(self, query_point, candidates, k):
-        distances = [{IMAGE_ID_COL: int(row[IMAGE_ID_COL]),
-                      'dist': self.hash_obj.dist(query_point, row.drop(IMAGE_ID_COL))}
+        distances = [{IMAGE_ID_COL: row['ImageID'],
+                      'distance': self.hash_obj.dist(query_point, row.drop('ImageID'))}
                      for idx, row in candidates.iterrows()]
         # distances []
         # for row in candidates.iterrows():
         #    dist = self.hash_obj.dist(query_point, )
-        return sorted(distances, key=lambda x: x['dist'])[:k]
+        return sorted(distances, key=lambda x: x['distance'])[:k]
 
 
 class l2DistHash:
@@ -131,11 +125,8 @@ final_desc = []
 img_df = None
 
 def run_lsh(input_vec, num_layers, num_hash):
-    w = 5
-    # Dimensions of input_vec? Most probably 256
-    dim = input_vec.shape[1]
-    #print("*******")
-    #print(dim)
+    w = 400
+    dim = 257
     vec = np.random.rand(num_layers, num_hash, dim - 1)
     b = np.random.randint(low=0, high=w, size=(num_layers, num_hash))
     l2_dist_obj = l2DistHash()
@@ -158,32 +149,46 @@ def getFeature(query_path, model_name):
     lst = fd.getFeatureDescriptors()
     return lst
 
-def img_ann(query, k, num_layers=100, num_hash=20, layer_file_name=None):
-    #print("*****************8")
-    w = 400
-    dim = img_df.shape[1]
+def img_ann(img_df, query, k, num_layers=10, num_hash=10, layer_file_name=None):
+    svd = TruncatedSVD(256)
+    feature_desc_transformed = svd.fit_transform(np.array(img_df.iloc[:, 1:]))
+    image_ids = img_df.iloc[:,0]
+    w = 50
+    dim = feature_desc_transformed.shape[1]
+    feature_desc_transformed = pd.DataFrame(feature_desc_transformed)
+    feature_desc_transformed['ImageID'] = image_ids
+    
+    #print(feature_desc_transformed)
     # Create vector with rand num in num_layers X num_hash X dim-1(1 dim for img_id)
-    vec = np.random.rand(num_layers, num_hash, dim - 1)
+    vec = np.random.rand(num_layers, num_hash, dim)
     #vec = np.arange(num_layers*num_hash*(dim-1)).reshape(num_layers, num_hash, dim-1)
     b = np.random.randint(low=0, high=w, size=(num_layers, num_hash))
     # b = np.arange(num_layers*num_hash).reshape(num_layers, num_hash)
     #print("^^^^^^^^^^^^^^^^^^^^^^^")
     l2_dist_obj = l2DistHash()
     lsh = LSH(hash_obj=l2_dist_obj, num_layers=num_layers, num_hash=num_hash, vec=vec, b=b, w=w)
-    hash_table = lsh.create_hash_table(img_df.iloc[0:500,:])
-    query_vec = getFeature(query, "CM")
-    query_vec = [i for sublist in query_vec for i in sublist]
-    t = len(query_vec)
-    query_vec = np.array(query_vec)
+    hash_table = lsh.create_hash_table(feature_desc_transformed.values)
+    #query_vec = getFeature(query, "CM")
+    query_vec = feature_desc_transformed.loc[feature_desc_transformed['ImageID'] == query]
+    query_vec = query_vec.iloc[:,:-1].values[0]
+    print(query_vec)
+    #query_vec = query_vec.iloc[0, :-1]
+    #print(query_vec)
+    # query_vec = feature_desc_transformed[10]
+    # t = len(query_vec)
+    # query_vec = np.array(query_vec)
     #query_vec = query_vec.values.reshape(t, )
+    
     candidate_ids = lsh.find_ann(query_point=query_vec, hash_table=hash_table, k=k)
-    candidate_vecs = img_df.loc[img_df[0].isin(candidate_ids)]
+    candidate_vecs = feature_desc_transformed.loc[feature_desc_transformed['ImageID'].isin(candidate_ids)]
+    print(candidate_vecs)
+    print(type(candidate_vecs))
     if not candidate_ids:
         return None
     dist_res = lsh.post_process_filter(query_point=query_vec, candidates=candidate_vecs, k=k)
-    for i in dist_res:
-        img_id = i[0]
-        i['loc'] = img_id_loc_df.loc[img_id_loc_df[0] == img_id, 'location'].item()
+    # for i in dist_res:
+    #     img_id = i[0]
+    #     i['loc'] = img_id_loc_df.loc[img_id_loc_df[0] == img_id, 'location'].item()
     return dist_res
 
 for descriptor in imagedb.image_models.find():
@@ -198,8 +203,10 @@ for descriptor in imagedb.image_models.find():
 
 img_df = pd.DataFrame(final_desc)
 #print(img_df)
-#hash_table = run_lsh(img_df.iloc[0:2000,:], 100, 20)
-hash_table = run_lsh(img_df, 100, 20)
-print(len(hash_table[0][0]))
-#result = img_ann("D:\ASU_Courses\MWDB-Final\MultiMedia-WebDatabase_Project\hands11k\Hand_0000003.jpg", 3)
-#print(result)
+img_df = img_df.iloc[0:6000, :]
+#hash_table, img_df_transformed = run_lsh(img_df, 10, 10)
+#print(img_df_transformed)
+# = run_lsh(img_df, 100, 20)
+#print(len(hash_table[0][0]))
+result = img_ann(img_df, 'Hand_0000674.jpg', 20)
+print(result)
