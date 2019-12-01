@@ -1,0 +1,252 @@
+import Constants as const
+import numpy as np
+from sklearn.decomposition import NMF
+from sklearn.decomposition import PCA
+from NonNegativeMatrix import NM_F
+import pandas as pd
+import os
+import pymongo
+
+client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
+imagedb = client["imagedb"]
+imagedb14 = client["imagedb14"]
+mydb14 = imagedb14["image_task_1_4"]
+dr_name = 'NMF'
+
+class PersonalizedPageRank(object):
+
+    def calculateDistanceMatrix(self, transformed_matrix):
+        sim_matrix = [[0 for j in range(len(transformed_matrix))] for i in range(len(transformed_matrix))]
+
+        for i in range(len(transformed_matrix)):
+            for j in range(len(transformed_matrix)):
+                if i==j:
+                    continue
+                #match_score = NM_F.nvsc(transformed_matrix[i], transformed_matrix[j])
+                euc_dis = np.square(np.subtract(transformed_matrix[i], transformed_matrix[j]))
+                match_score = np.sqrt(euc_dis.sum(0))
+                sim_matrix[i][j] = abs(match_score)
+
+        return sim_matrix
+
+    # def calculateImageSimilarityGraph(self, k):
+    #     feature_desc = []
+    #     img_list = []
+    #     for descriptor in imagedb14.image_models.find():
+    #         feature_desc.append(descriptor["bag_LBP"])
+    #         img_list.append(descriptor["_id"])
+    #     nmf_ = NMF(n_components=30)
+    #     W = nmf_.fit_transform(feature_desc)
+    #
+    #     dist_matrix = self.calculateDistanceMatrix(W)
+    #
+    #     sim_graph = [[-1 for j in range(len(dist_matrix))] for i in range(len(dist_matrix))]
+    #
+    #     for idx,row in enumerate(dist_matrix):
+    #         new_row = []
+    #         for i, val in enumerate(row):
+    #             new_row.append([val, i])
+    #         new_row.sort(key=lambda x:x[0])
+    #         for item in new_row[1:k+1]:
+    #             sim_graph[idx][item[1]] = item[0]
+    #
+    #     return img_list, sim_graph
+
+    def calculateImageSimilarityGraph(self, k):
+        feature_desc = []
+        img_list = []
+        for descriptor in imagedb14.image_models.find():
+            feature_desc.append(descriptor["HOG"])
+            img_list.append(descriptor["_id"])
+        # nmf_ = NMF(n_components=30)
+        # W = nmf_.fit_transform(feature_desc)
+
+        pca = PCA(55)
+        feature_desc_transformed = pca.fit_transform(feature_desc)
+
+        dist_matrix = self.calculateDistanceMatrix(feature_desc_transformed)
+
+        sim_graph = [[-1 for j in range(len(dist_matrix))] for i in range(len(dist_matrix))]
+
+        for idx,row in enumerate(dist_matrix):
+            new_row = []
+            for i, val in enumerate(row):
+                new_row.append([val, i])
+            new_row.sort(key=lambda x:x[0])
+            for item in new_row[1:k+1]:
+                sim_graph[idx][item[1]] = item[0]
+
+        return img_list, sim_graph
+
+    def calculateImageSimilarityGraphOnImageList(self, img_list, k):
+        feature_desc = []
+        #img_list = []
+        for img in img_list:
+            feature_desc.append(imagedb.image_models.find({"_id": img})[0]["HOG"])
+        # nmf_ = NMF(n_components=30)
+        # W = nmf_.fit_transform(feature_desc)
+
+        pca = PCA(55)
+        feature_desc_transformed = pca.fit_transform(feature_desc)
+
+        dist_matrix = self.calculateDistanceMatrix(feature_desc_transformed)
+
+        sim_graph = [[-1 for j in range(len(dist_matrix))] for i in range(len(dist_matrix))]
+
+        for idx,row in enumerate(dist_matrix):
+            new_row = []
+            for i, val in enumerate(row):
+                new_row.append([val, i])
+            new_row.sort(key=lambda x:x[0])
+            for item in new_row[1:k+1]:
+                sim_graph[idx][item[1]] = item[0]
+
+        return sim_graph
+
+    def getPersonalizedPageRank(self, sim_graph, k, seed_values, tolerance=1.0e-5):
+        np_graph = np.array(sim_graph)
+        #print(np_graph.shape)
+        graph_transpose = np_graph.transpose()
+        #print(graph_transpose.shape)
+        damping_factor = 0.85
+        error = 1
+
+        page_rank_current = np.array([0.0 for i in range(len(sim_graph))])
+        initial_page_rank = np.array([0.0 for i in range(len(sim_graph))])
+        self.set_seed_values(page_rank_current, seed_values, damping_factor)
+        self.set_seed_values(initial_page_rank, seed_values, damping_factor)
+
+        while error > tolerance:
+            for index, row in enumerate(graph_transpose):
+                edge_indexes = np.nonzero(row > -1)[0]
+                #edge_indexes.toList()
+                for edge_index in edge_indexes:
+                    page_rank_current[index] += (initial_page_rank[edge_index] * damping_factor) / k
+
+            error = np.linalg.norm(page_rank_current - initial_page_rank, 2)
+            initial_page_rank = page_rank_current
+            page_rank_current = np.array([0.0 for i in range(len(sim_graph))])
+            self.set_seed_values(page_rank_current, seed_values, damping_factor)
+
+        return initial_page_rank
+
+    def set_seed_values(self, rank_array, seed_values, damping_factor):
+        for index in seed_values:
+            rank_array[index] = (1- damping_factor)/3
+
+    def getKDominantImagesUsingPPR(self, k, K, seedList):
+        img_list, sim_graph = self.calculateImageSimilarityGraph(k)
+        df = pd.DataFrame(sim_graph)
+        csv_path = os.path.join("..", "csv", "pprGraph.csv")
+        df.to_csv(csv_path, index=False, header=False)
+        seed_values = []
+        for image in seedList:
+            seed_values.append(img_list.index(image))
+        page_rank = self.getPersonalizedPageRank(sim_graph,k,seed_values)
+
+        rank_dict ={}
+        for i, image in enumerate(img_list):
+            rank_dict[image] = page_rank[i]
+
+        count = 0
+        print("\n\nNow printing top {} matched Images and their matching scores".format(K))
+        # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
+
+        for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):
+            if count < K:
+                print(key + " has matching score:: " + str(value))
+                # shutil.copy(os.path.join(head, key), res_dir)
+                count += 1
+            else:
+                break
+
+
+    def ppr_classification(self, sim_graph, labels, k):
+        page_rank_scores_for_label = {}
+        for label in labels:
+            page_rank_for_label = self.getPersonalizedPageRank(sim_graph, k, labels[label],tolerance=1.0e-5)
+            page_rank_scores_for_label[label] = page_rank_for_label
+
+        return page_rank_scores_for_label
+
+    def classifyUnlabelledImagesUsingPPR(self, k):
+        img_list, sim_graph = self.calculateImageSimilarityGraph(k)
+        img_dict = {}
+        for index, img in enumerate(img_list):
+            img_dict[img] = index
+        labels = {}
+        labels['dorsal'] = []
+        labels['palmar'] = []
+        for row in imagedb14.labelled_set1.find():
+            if 'dorsal' in row['aspectOfHand'] and row['imageName'] in img_dict:
+                labels['dorsal'].append(img_dict[row['imageName']])
+            if 'palmar' in row['aspectOfHand'] and row['imageName'] in img_dict:
+                labels['palmar'].append(img_dict[row['imageName']])
+
+        for row in imagedb14.labelled_set2.find():
+            if 'dorsal' in row['aspectOfHand'] and row['imageName'] in img_dict:
+                labels['dorsal'].append(img_dict[row['imageName']])
+            if 'palmar' in row['aspectOfHand'] and row['imageName'] in img_dict:
+                labels['palmar'].append(img_dict[row['imageName']])
+
+        page_rank_scores_for_label = self.ppr_classification(sim_graph, labels, k)
+
+        classification_result = {}
+        for row in imagedb14.unlabelled_set1.find():
+            if row['imageName'] in img_dict:
+                if page_rank_scores_for_label['dorsal'][img_dict[row['imageName']]] > page_rank_scores_for_label['palmar'][img_dict[row['imageName']]]:
+                    classification_result[row['imageName']] = 'dorsal'
+                else:
+                    classification_result[row['imageName']] = 'palmar'
+
+        for row in imagedb14.unlabelled_set2.find():
+            if row['imageName'] in img_dict:
+                if page_rank_scores_for_label['dorsal'][img_dict[row['imageName']]] < page_rank_scores_for_label['palmar'][img_dict[row['imageName']]]:
+                    classification_result[row['imageName']] = 'palmar'
+                else:
+                    classification_result[row['imageName']] = 'dorsal'
+
+        count =0
+        for img in classification_result:
+            if (classification_result[img] in imagedb14.HandInfo.find({"imageName": img})[0]['aspectOfHand']):
+                count+=1
+
+        successRatio = (count/len(classification_result))*100
+        print(successRatio)
+        return classification_result
+
+
+
+    def relevanceFeedbackPPR(self, image_list, labels):
+        sim_graph = self.calculateImageSimilarityGraphOnImageList()
+
+        k = max(3, len(image_list)//15)
+        page_rank_scores_for_label = self.ppr_classification(sim_graph, labels, k)
+
+        score_label = []
+
+        if "Relevant" not in page_rank_scores_for_label:
+            score_label = [-1*score for score in page_rank_scores_for_label["Irrelevant"]]
+        elif "Irrelevant" not in page_rank_scores_for_label:
+            score_label = page_rank_scores_for_label["Relevant"]
+        else:
+            score_label = [(page_rank_scores_for_label["Relevant"][i] - page_rank_scores_for_label["Irrelevant"][i]) for i in range(len(page_rank_scores_for_label["Relevant"]))]
+
+        rank_dict = {}
+        for i, image in enumerate(image_list):
+            rank_dict[image] = score_label[i]
+
+        for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):
+            print(key + " has matching score:: " + str(value))
+
+        return rank_dict
+
+
+#Uncomment below lines to run PPR cases
+
+# x = PersonalizedPageRank()
+# x.getKDominantImagesUsingPPR(5,10, ['Hand_0008333.jpg', 'Hand_0006183.jpg','Hand_0000074.jpg'])
+#
+# print(x.classifyUnlabelledImagesUsingPPR(5))
+
+
