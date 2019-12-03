@@ -15,8 +15,8 @@ class CM(ModelBase):
         self.yuvFile = "../output/CM_" + tail[:len(tail) - 4] + ".png"
 
     def getFeatureDescriptors(self):
-        if (os.path.exists(self.resultFile)):
-            return []
+        # if (os.path.exists(self.resultFile)):
+        #     return []
 
         # Read the image
         img = cv2.imread(self.imgLoc)

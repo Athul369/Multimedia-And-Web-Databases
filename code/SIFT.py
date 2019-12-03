@@ -38,7 +38,7 @@ class SIFT(ModelBase):
                 # end of our feature vector
                 concat = vector_size - len(dsc)
                 dsc = np.concatenate((dsc, np.zeros((concat, 128))), axis=0)
-            descriptor = dsc
+            descriptor = dsc.tolist()
 
         except cv2.error as e:
             print('Error: ', e)
