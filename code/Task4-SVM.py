@@ -15,7 +15,7 @@ imagedb14 = client["imagedb14"]
 class SVM:
     a = 0
 
-    def preprocess_pca(self, model, k, labelled_csv, unlablled_csv):
+    def preprocess_SVM(self, model, k, labelled_csv, unlablled_csv):
         a = 0
         model = model
         img_list = []
@@ -127,4 +127,4 @@ class SVM:
 
 if __name__ == '__main__':
     s1 = SVM()
-    s1.preprocess_pca("HOG", 20, "labelled_set1", "unlabelled_set1")
+    s1.preprocess_SVM("HOG", 20, "labelled_set1", "unlabelled_set1")
