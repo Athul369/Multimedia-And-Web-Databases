@@ -55,7 +55,7 @@ class NM_F(object):
     def mSimilarImage(self, imgLoc, model, k, m):
         model_name = model
 
-        model = "bag_" + model
+        # model = "bag_" + model
         feature_desc = []
         img_list = []
         for descriptor in imagedb.image_models.find():
@@ -89,7 +89,8 @@ class NM_F(object):
         print("\n\nNow printing top {} matched Images and their matching scores".format(m))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
         head, tail = os.path.split(imgLoc)
-        vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, '')
+        # vz.visualize_matching_images(tail, rank_dict, k, m, dr_name, model_name, '')
+        vz.visualize_relevance_feedback(tail, rank_dict, k, m, dr_name, model_name, '')
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1]):
             if count < m:
                 print(key + " has matching score:: " + str(value))
@@ -371,7 +372,7 @@ class NM_F(object):
 
     ####################feature- latentsemantics  visualizer function
 
-    def feature_latent_product(featMat, latMat, image_list):
+    def feature_latent_product(self, featMat, latMat, image_list):
         a = 0
         visualizerDict = {}
         for i in range(len(latMat)):
