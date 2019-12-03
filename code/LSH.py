@@ -2,6 +2,7 @@ import math
 from collections import defaultdict
 from functools import reduce
 from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import PCA
 
 from LocalBinaryPatterns import LBP
 from ColorMoments import CM
@@ -11,11 +12,8 @@ from HOGmain import HOG
 import numpy as np
 import pandas as pd
 
-#from phase1.csvProcessor import CsvProcessor
-
-SEED = 12
-np.random.seed(SEED)
 IMAGE_ID_COL = 'ImageId'
+
 import pymongo
 
 client = pymongo.MongoClient('localhost', 27017)
@@ -33,23 +31,15 @@ class LSH:
         self.w = w
 
     def create_hash_table(self, img_vecs, verbose=False):
-        """ Vectorized hash function to bucket all img vecs
-
-            Returns
-            -------
-            hash_table : List of List of defaultdicts
-            
-        """
-        #print(img_vecs)
-        #print(type(img_vecs))
         hash_table = self.init_hash_table()
         nrows, ncols = img_vecs.shape[0], img_vecs.shape[1]
         for i in range(nrows):
-            img_id, img_vec = img_vecs[i][-1], np.array(img_vecs[i][:-1])
+            img_id, img_vec = img_vecs[i][0], np.array(img_vecs[i][1:])
             for idx, hash_vec in enumerate(hash_table):
                 buckets = self.hash_obj.hash(img_vec, self.vec[idx], self.b[idx], self.w)
                 for i in range(len(buckets)):
                     hash_vec[i][buckets[i]].add(img_id)
+
         return hash_table
 
     def init_hash_table(self):
@@ -65,56 +55,46 @@ class LSH:
     def find_ann(self, query_point, hash_table, k):
         candidate_imgs = set()
         num_conjunctions = self.num_hash
+        count_overall = 0
         for layer_idx, layer in enumerate(self.vec):
             hash_vec = hash_table[layer_idx]
             buckets = self.hash_obj.hash(query_point, layer, self.b[layer_idx], self.w)
             cand = hash_vec[0][buckets[0]].copy()
-            # self.test(hash_vec[1])
+            count_overall = len(cand)
             for ix, idx in enumerate(buckets[1:num_conjunctions]):
-                # needs ix+1 since we already took care of index 0
+                count_overall = count_overall + len(hash_vec[ix + 1][idx])
                 cand = cand.intersection(hash_vec[ix + 1][idx])
             candidate_imgs = candidate_imgs.union(cand)
-            print("---------------  Candidate Images  ------------------")
-            print(candidate_imgs)
+            # print("---------------  Candidate Images  ------------------")
+            # print(candidate_imgs)
             if len(candidate_imgs) > 4 * k:
                 print(f'Early stopping at layer {layer_idx} found {len(candidate_imgs) }')
                 break
         if len(candidate_imgs) < k:
             if num_conjunctions > 1:
                 self.num_hash -= 1
-                print('Reduced number of hashes')
+                #print(self.num_hash)
+                #print('Reduced number of hashes')
                 return self.find_ann(query_point, hash_table, k=k)
             else:
                 print('Cannot reduce number of hashes')
+        print("Overall Images: ", count_overall)
+        print("Count of Unique Images: ", len(candidate_imgs))
         return candidate_imgs
 
     def post_process_filter(self, query_point, candidates, k):
-        distances = [{IMAGE_ID_COL: row['ImageID'],
-                      'distance': self.hash_obj.dist(query_point, row.drop('ImageID'))}
+        distances = [{IMAGE_ID_COL: row[0],
+                      'distance': self.hash_obj.dist(query_point, row.drop(0))}
                      for idx, row in candidates.iterrows()]
-        # distances []
-        # for row in candidates.iterrows():
-        #    dist = self.hash_obj.dist(query_point, )
         return sorted(distances, key=lambda x: x['distance'])[:k]
 
 
 class l2DistHash:
 
     def hash(self, point, vec, b, w):
-        """
-            Parameters
-            ----------
-            point :
-            vec:
-
-            Returns
-            -------
-            numpy array of which buckets point falls in given layer
-        """
         val = np.dot(vec, point) + b
         val = val * 100
         res = np.floor_divide(val, w)
-        # print(len(res))
         return res
 
     def dist(self, point1, point2):
@@ -125,7 +105,7 @@ final_desc = []
 img_df = None
 
 def run_lsh(input_vec, num_layers, num_hash):
-    w = 400
+    w = 300
     dim = 257
     vec = np.random.rand(num_layers, num_hash, dim - 1)
     b = np.random.randint(low=0, high=w, size=(num_layers, num_hash))
@@ -150,63 +130,100 @@ def getFeature(query_path, model_name):
     return lst
 
 def img_ann(img_df, query, k, num_layers=10, num_hash=10, layer_file_name=None):
-    svd = TruncatedSVD(256)
-    feature_desc_transformed = svd.fit_transform(np.array(img_df.iloc[:, 1:]))
     image_ids = img_df.iloc[:,0]
     w = 50
-    dim = feature_desc_transformed.shape[1]
-    feature_desc_transformed = pd.DataFrame(feature_desc_transformed)
-    feature_desc_transformed['ImageID'] = image_ids
-    
-    #print(feature_desc_transformed)
-    # Create vector with rand num in num_layers X num_hash X dim-1(1 dim for img_id)
-    vec = np.random.rand(num_layers, num_hash, dim)
-    #vec = np.arange(num_layers*num_hash*(dim-1)).reshape(num_layers, num_hash, dim-1)
+    dim = img_df.shape[1]
+    vec = np.random.rand(num_layers, num_hash, dim - 1)
     b = np.random.randint(low=0, high=w, size=(num_layers, num_hash))
-    # b = np.arange(num_layers*num_hash).reshape(num_layers, num_hash)
-    #print("^^^^^^^^^^^^^^^^^^^^^^^")
     l2_dist_obj = l2DistHash()
     lsh = LSH(hash_obj=l2_dist_obj, num_layers=num_layers, num_hash=num_hash, vec=vec, b=b, w=w)
-    hash_table = lsh.create_hash_table(feature_desc_transformed.values)
-    #query_vec = getFeature(query, "CM")
-    query_vec = feature_desc_transformed.loc[feature_desc_transformed['ImageID'] == query]
-    query_vec = query_vec.iloc[:,:-1].values[0]
-    print(query_vec)
-    #query_vec = query_vec.iloc[0, :-1]
-    #print(query_vec)
-    # query_vec = feature_desc_transformed[10]
-    # t = len(query_vec)
-    # query_vec = np.array(query_vec)
-    #query_vec = query_vec.values.reshape(t, )
+    # LSH index structure
+    hash_table = lsh.create_hash_table(img_df.values)
+    query_vec = img_df.loc[img_df[0] == query]
+    query_vec = query_vec.iloc[:,1:].values[0]
     
     candidate_ids = lsh.find_ann(query_point=query_vec, hash_table=hash_table, k=k)
-    candidate_vecs = feature_desc_transformed.loc[feature_desc_transformed['ImageID'].isin(candidate_ids)]
-    print(candidate_vecs)
-    print(type(candidate_vecs))
+    candidate_vecs = img_df.loc[img_df[0].isin(candidate_ids)]
+    #print(len(candidate_ids))
+
     if not candidate_ids:
         return None
     dist_res = lsh.post_process_filter(query_point=query_vec, candidates=candidate_vecs, k=k)
-    # for i in dist_res:
-    #     img_id = i[0]
-    #     i['loc'] = img_id_loc_df.loc[img_id_loc_df[0] == img_id, 'location'].item()
     return dist_res
 
-for descriptor in imagedb.image_models.find():
-    desc = []
-    desc.append(descriptor['_id'])
-    cm_desc = descriptor['CM']
-    cm_concat_desc = [i for cm in cm_desc for i in cm]
-    for i in cm_concat_desc:
-        desc.append(i)
-    final_desc.append(desc)
-    #print(final_desc)
+################################### MAIN FUNCTION #####################################
 
-img_df = pd.DataFrame(final_desc)
-#print(img_df)
-img_df = img_df.iloc[0:6000, :]
-#hash_table, img_df_transformed = run_lsh(img_df, 10, 10)
-#print(img_df_transformed)
-# = run_lsh(img_df, 100, 20)
-#print(len(hash_table[0][0]))
+imgdf = None
+k = 0
+
+#n = imagedb.image_models.count()
+
+
+# final_desc = []
+# for descriptor in imagedb.image_models.find().limit(1000):
+#     hog_desc = descriptor['HOG']
+#     hog_concat_desc = [i for cm in hog_desc for i in cm]
+#     desc = [descriptor['_id']] + hog_concat_desc
+#     final_desc.append(desc)
+# imgdf = pd.DataFrame(final_desc)
+# imgdf.to_csv("output.csv", index = False, header = False)
+
+
+# for i in range(1, 11):
+#     final_desc = []
+#     for descriptor in imagedb.image_models.find().skip(i*1000).limit(1000):
+#         hog_desc = descriptor['HOG']
+#         hog_concat_desc = [i for cm in hog_desc for i in cm]
+#         desc = [descriptor['_id']] + hog_concat_desc
+#         final_desc.append(desc)
+#     imgdf = pd.DataFrame(final_desc)
+#     with open("output.csv", 'a', newline = '') as f:
+#         imgdf.to_csv(f, index = False, header = False)
+
+# for descriptor in imagedb.image_models.find().skip(11000):
+#         hog_desc = descriptor['HOG']
+#         hog_concat_desc = [i for cm in hog_desc for i in cm]
+#         desc = [descriptor['_id']] + hog_concat_desc
+#         final_desc.append(desc)
+# imgdf = pd.DataFrame(final_desc)
+# with open("output.csv", 'a', newline = '') as f:
+#     imgdf.to_csv(f, index = False, header = False)
+
+
+
+# img_df = pd.read_csv("output.csv", nrows = 1000, header = None)
+# print(img_df)
+
+# pca = PCA(256)
+# feature_desc_fit_transformed = pd.DataFrame(pca.fit_transform(np.array(img_df.iloc[:, 1:])))
+# for i in range(1, 11):
+#     print(i)
+#     img_df = pd.read_csv("output.csv", skiprows=1000*i, nrows=1000, header = None)
+#     new_feature_desc = pd.DataFrame(pca.transform(np.array(img_df.iloc[:, 1:])))
+#     feature_desc_fit_transformed = feature_desc_fit_transformed.append(new_feature_desc, ignore_index = True)
+
+# img_df = pd.read_csv("output.csv", skiprows=12000, header = None)   
+# new_feature_desc = pd.DataFrame(pca.transform(np.array(img_df.iloc[:, 1:])))
+# feature_desc_fit_transformed = feature_desc_fit_transformed.append(new_feature_desc, ignore_index = True)
+
+# feature_desc_fit_transformed.to_csv("output_pca.csv", index = False, header = False)
+
+# feature_df = pd.read_csv("output_pca.csv", header = None)
+# print(feature_df.shape)
+
+# image_id_list = []
+# for descriptor in imagedb.image_models.find():
+#     image_id_list.append(descriptor['_id'])
+
+# print(len(image_id_list))
+
+# feature_df.insert(loc = 0, column = None, value = image_id_list)
+# print(feature_df.shape)
+# feature_df.to_csv("output_pca_final.csv", index = False, header = False)
+
+img_df = pd.read_csv("output_pca_final.csv", header = None)
+#print(img_df.shape)
+
 result = img_ann(img_df, 'Hand_0000674.jpg', 20)
+print()
 print(result)
