@@ -1,9 +1,11 @@
+from tkinter import *
 import tkinter as tk
 import cv2
 import os
 import pymongo
 from HorizontalScrollableFrame import HSF
 from VerticalScrollableFrame import VSF
+from PPR import PersonalizedPageRank
 import Constants as const
 from PIL import Image
 from PIL import ImageTk
@@ -52,16 +54,18 @@ def get_subject_imgnames(subject):
     return img_names
 
 
-def create_thumbnail(img_id):
+def create_thumbnail(img_id, task):
     # Load an image using OpenCV
-    img_path = os.path.join(img_dir, img_id)
+    img_path = os.path.join(const.DB14_IMG_PATH, img_id)
+    if task == 5 or task == 6:
+        img_path = os.path.join(img_dir, img_id)
     # print('Loading image at path: %s' % img_path)
     cv_img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
     tn_img = cv2.resize(cv_img, thumbnail_size, interpolation=cv2.INTER_AREA)
     return tn_img
 
 
-def run_relevance_feedback(rf_technique, img_list, feedback, window):
+def run_relevance_feedback(q_img, m, rf_technique, img_list, feedback, window):
     rel_feedback = {}
     rel_imgs = []
     irr_imgs = []
@@ -79,29 +83,30 @@ def run_relevance_feedback(rf_technique, img_list, feedback, window):
     print(rel_feedback['Relevant'])
     print(rel_feedback['Irrelevant'])
 
+    window.destroy()
+
     if rf_technique == 0:
         print('Call SVM API')
     if rf_technique == 1:
         print('Call Decision Tree API')
     if rf_technique == 2:
         print('Call PPR-Based API')
+        ppr = PersonalizedPageRank()
+        rf_feedback = ppr.relevanceFeedbackPPR(img_list, rel_feedback)
+        visualize_relevance_feedback_from_list(q_img, rf_feedback, m)
     if rf_technique == 3:
         print('Call Probabilistic API')
 
-    window.destroy()
 
-
-def visualize_relevance_feedback(q_img, images_data, k, m, technique, fm, label):
+def visualize_relevance_feedback(q_img, images_data, m):
     photos = []
-    imgdata_to_visualize = []
+    # imgdata_to_visualize = []
     imgs = []
     feedback = {}
     # Create a window
     window = tk.Tk()
     title_txt = "Relevance Feedback Visualizer"
     # title_txt = "Visualization of %s Most Related Images for %s with %s Feature Descriptors" % (str(m), technique, fm)
-    if label != '':
-        title_txt = title_txt + ' and label: ' + label
     window.title(title_txt)
     """ Add an additional Label to display number of Latent Semantics"""
     row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
@@ -127,7 +132,7 @@ def visualize_relevance_feedback(q_img, images_data, k, m, technique, fm, label)
     q_lbl.grid(row=0, column=0)
     q_name.grid(row=0, column=1)
     # q_row = tk.Frame(window)
-    q_cimg = create_thumbnail(q_img)
+    q_cimg = create_thumbnail(q_img, 6)
     q_canvas = tk.Canvas(q_header, width=thumbnail_size[0], height=thumbnail_size[1])
     q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_cimg))
     # Add a PhotoImage to the Canvas
@@ -145,7 +150,7 @@ def visualize_relevance_feedback(q_img, images_data, k, m, technique, fm, label)
         if count < m:
             row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
 
-            tn_img = create_thumbnail(key)
+            tn_img = create_thumbnail(key, 6)
 
             # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
             height, width, no_channels = tn_img.shape
@@ -179,7 +184,7 @@ def visualize_relevance_feedback(q_img, images_data, k, m, technique, fm, label)
             # label.grid(row=cur_row, column=score_col)
             """ After adding the image thumbnail and score up the current row value. """
             # cur_row += 1
-            imgdata_to_visualize.append((canvas, label))
+            # imgdata_to_visualize.append((canvas, label))
             """ Up the count after adding the image thumbnail and score. """
             count += 1
             """ If we have 5 images go ahead and reset current row to 0 so if more images occur we can display
@@ -193,24 +198,22 @@ def visualize_relevance_feedback(q_img, images_data, k, m, technique, fm, label)
 
     btn_row = 21
     done_btn = tk.Button(window, text='Run selected technique with relevance feedback.',
-                         command=lambda: run_relevance_feedback(v.get(), imgs, feedback, window))
+                         command=lambda: run_relevance_feedback(q_img, m, v.get(), imgs, feedback, window))
     done_btn.grid(row=btn_row, columnspan=12)
 
     window.mainloop()
     # return v.get(), feedback
 
 
-def visualize_relevance_feedback_from_list(q_img, images_data, k, m, technique, fm, label):
+def visualize_relevance_feedback_from_list(q_img, images_data, m):
     photos = []
-    imgdata_to_visualize = []
+    # imgdata_to_visualize = []
     imgs = []
     feedback = {}
     # Create a window
     window = tk.Tk()
     title_txt = "Relevance Feedback Visualizer"
     # title_txt = "Visualization of %s Most Related Images for %s with %s Feature Descriptors" % (str(m), technique, fm)
-    if label != '':
-        title_txt = title_txt + ' and label: ' + label
     window.title(title_txt)
     """ Add an additional Label to display number of Latent Semantics"""
     row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
@@ -236,7 +239,7 @@ def visualize_relevance_feedback_from_list(q_img, images_data, k, m, technique, 
     q_lbl.grid(row=0, column=0)
     q_name.grid(row=0, column=1)
     # q_row = tk.Frame(window)
-    q_cimg = create_thumbnail(q_img)
+    q_cimg = create_thumbnail(q_img, 6)
     q_canvas = tk.Canvas(q_header, width=thumbnail_size[0], height=thumbnail_size[1])
     q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_cimg))
     # Add a PhotoImage to the Canvas
@@ -250,11 +253,125 @@ def visualize_relevance_feedback_from_list(q_img, images_data, k, m, technique, 
     img_col = 2
     score_col = 3
     count = 0
-    for key, value in sorted(images_data.items(), key=lambda item: item[1]):
+    for img in images_data:
         if count < m:
             row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
 
-            tn_img = create_thumbnail(key)
+            tn_img = create_thumbnail(img, 6)
+
+            # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
+            height, width, no_channels = tn_img.shape
+
+            # Create a canvas that can fit the above image
+            canvas = tk.Canvas(row, width=width, height=height)
+            # Use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
+            photo = ImageTk.PhotoImage(image=Image.fromarray(tn_img))
+            photos.append(photo)
+            # Add a PhotoImage to the Canvas
+            canvas.create_image(0, 0, image=photos[count], anchor=tk.NW)
+            # print('Giving label %s to last image loaded' % key)
+            # print()
+            img_match_lbl = tk.Label(window, text='Related Image #%s' % str(count + 1))
+            match_label = tk.Label(window, text=img)
+            img_match_lbl.grid(row=cur_row, column=img_col)
+            match_label.grid(row=cur_row, column=score_col)
+            """ After displaying the label of the image to be displayed up the current row value. """
+            cur_row += 1
+            row.grid(row=cur_row, column=img_col, columnspan=2, rowspan=3)
+            canvas.grid(row=cur_row, column=img_col, rowspan=3)
+            rel_num = tk.IntVar()
+            rel_num.set(1)  # initializing the choice to be no label
+            for val, lbl in enumerate(rel_lbls):
+                rb = tk.Radiobutton(row, text=lbl[0], variable=rel_num, value=val)
+                rb.grid(row=cur_row, column=score_col)
+                # label = tk.Label(row, text=str(value))
+                cur_row += 1
+                imgs.append(img)
+                feedback[img] = (count, rel_num)
+            # label.grid(row=cur_row, column=score_col)
+            """ After adding the image thumbnail and score up the current row value. """
+            # cur_row += 1
+            # imgdata_to_visualize.append((canvas, label))
+            """ Up the count after adding the image thumbnail and score. """
+            count += 1
+            """ If we have 5 images go ahead and reset current row to 0 so if more images occur we can display
+                those images in the following column. Also increase the columns for images and scores by 2. """
+            if count % 5 == 0:
+                cur_row = 1
+                img_col += 2
+                score_col += 2
+        else:
+            break
+
+    btn_row = 21
+    done_btn = tk.Button(window, text='Run selected technique with relevance feedback.',
+                         command=lambda: run_relevance_feedback(q_img, m, v.get(), imgs, feedback, window))
+    done_btn.grid(row=btn_row, columnspan=12)
+    window.mainloop()
+
+
+def visualize_ppr_images(q_imgs, images_data, k, K, dr_name):
+    q_photos = []
+    photos = []
+    imgdata_to_visualize = []
+    # Create a window
+    window = tk.Tk()
+    title_txt = "Visualization of %s Most Dominant Images using PPR and Random Walks restart" % str(K)
+    window.title(title_txt)
+    """ Add an additional Label to display number of Latent Semantics"""
+    row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+    cur_row = 0
+    ls_lbl = tk.Label(row, text='Using %s outgoing edges' % str(k))
+    row.grid(row=cur_row, column=0, columnspan=2)
+    ls_lbl.grid(row=cur_row, column=0, columnspan=2)
+    cur_row += 1
+    q_header = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+    q_lbl = tk.Label(q_header, text='Query Images')
+    q_name = tk.Label(q_header, text='Query Image IDs')
+    """ rowspan set to 11 as that is the max count of rows for images 
+        and data that will be stored for 5 or more similar images."""
+    q_header.grid(row=0, column=0, columnspan=2, rowspan=11)
+    q_lbl.grid(row=0, column=0)
+    q_name.grid(row=0, column=1)
+    q_count = 0
+    q_row = 1
+    for img in q_imgs:
+        q_cimg = create_thumbnail(img, 3)
+        q_canvas = tk.Canvas(q_header, width=thumbnail_size[0], height=thumbnail_size[1])
+        q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_cimg))
+        q_photos.append(q_photo)
+        # Add a PhotoImage to the Canvas
+        q_canvas.create_image(0, 0, image=q_photos[q_count], anchor=tk.NW)
+        # print('Giving label %s to last image loaded' % q_img)
+        # print()
+        q_id = tk.Label(q_header, text=img)
+        q_canvas.grid(row=q_row, column=0)
+        q_id.grid(row=q_row, column=1)
+        q_row += 1
+        q_count += 1
+
+    img_label = tk.Label(window, text='Image ID')
+    img_score = tk.Label(window, text='Matching Score')
+    img_label.grid(row=0, column=2)
+    img_score.grid(row=0, column=3)
+    cur_row = 1
+    img_col = 2
+    score_col = 3
+    count = 0
+    for key, value in sorted(images_data.items(), key=lambda item: item[1], reverse=True):
+        if count < K:
+            """ This will only happen if we have more than 5 similar images to visualize.
+                In this case repeat the header frame above next 5 similar images. """
+            if cur_row == 0:
+                img_label = tk.Label(window, text='Image ID')
+                img_score = tk.Label(window, text='Matching Score')
+                img_label.grid(row=cur_row, column=img_col)
+                img_score.grid(row=cur_row, column=score_col)
+                cur_row += 1
+
+            row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
+
+            tn_img = create_thumbnail(key, 3)
 
             # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
             height, width, no_channels = tn_img.shape
@@ -274,37 +391,107 @@ def visualize_relevance_feedback_from_list(q_img, images_data, k, m, technique, 
             match_label.grid(row=cur_row, column=score_col)
             """ After displaying the label of the image to be displayed up the current row value. """
             cur_row += 1
-            row.grid(row=cur_row, column=img_col, columnspan=2, rowspan=3)
-            canvas.grid(row=cur_row, column=img_col, rowspan=3)
-            rel_num = tk.IntVar()
-            rel_num.set(1)  # initializing the choice to be no label
-            for val, lbl in enumerate(rel_lbls):
-                rb = tk.Radiobutton(row, text=lbl[0], variable=rel_num, value=val)
-                rb.grid(row=cur_row, column=score_col)
-                # label = tk.Label(row, text=str(value))
-                cur_row += 1
-                feedback[key] = rel_num
-            # label.grid(row=cur_row, column=score_col)
+            label = tk.Label(row, text=str(value))
+            row.grid(row=cur_row, column=img_col, columnspan=2)
+            canvas.grid(row=cur_row, column=img_col)
+            label.grid(row=cur_row, column=score_col)
             """ After adding the image thumbnail and score up the current row value. """
-            # cur_row += 1
+            cur_row += 1
             imgdata_to_visualize.append((canvas, label))
             """ Up the count after adding the image thumbnail and score. """
             count += 1
             """ If we have 5 images go ahead and reset current row to 0 so if more images occur we can display
                 those images in the following column. Also increase the columns for images and scores by 2. """
             if count % 5 == 0:
-                cur_row = 1
+                cur_row = 0
                 img_col += 2
                 score_col += 2
         else:
             break
 
-    for img, feedback_val in feedback.items():
-        print('Image: %s' % img)
-        print('Value: %d' % feedback_val.get())
     window.mainloop()
 
-    # return v.get(), feedback
+
+def visualize_labelled_images(images_data, k, classifier):
+    print('Visualization for Labelled Images called')
+    # Create a window
+    window = tk.Tk()
+    frame = VSF(window, subj_width, data_ls_height)
+    title_txt = "Visualization of Labeled Images (Dorsal-hand vs Palmar-hand)"
+    if k != 0:
+        title_txt = title_txt + ' using %d latent semantics' % k
+    if classifier != '':
+        title_txt = title_txt + ' using %s classifier' % classifier
+    window.title(title_txt)
+
+    d_imgs = []
+    d_row = 0
+    d_col = 0
+    d_id_col = 1
+    d_count = 0
+    p_imgs = []
+    p_row = 0
+    p_col = 4
+    p_id_col = 5
+    p_count = 0
+
+    # Initial box setup
+    d_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+    d_lbl = tk.Label(d_holder, text='Dorsal Images')
+    d_ids = tk.Label(d_holder, text='Image ID')
+    d_holder.grid(row=d_row, column=d_col, columnspan=4, sticky=N)
+    d_lbl.grid(row=d_row, column=d_col)
+    d_ids.grid(row=d_row, column=d_id_col)
+    p_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
+    p_lbl = tk.Label(p_holder, text='Palmar Images')
+    p_ids = tk.Label(p_holder, text='Image ID')
+    p_holder.grid(row=p_row, column=p_col, columnspan=4, sticky=N)
+    p_lbl.grid(row=p_row, column=p_col)
+    p_ids.grid(row=p_row, column=p_id_col)
+    d_row += 1
+    p_row += 1
+
+    for img, label in images_data.items():
+        if label == 'dorsal':
+            d_img = create_thumbnail(img, 1)
+            d_canvas = tk.Canvas(d_holder, width=thumbnail_size[0], height=thumbnail_size[1])
+            d_photo = ImageTk.PhotoImage(image=Image.fromarray(d_img))
+            d_imgs.append(d_photo)
+            # Add a PhotoImage to the Canvas
+            d_canvas.create_image(0, 0, image=d_imgs[d_count], anchor=tk.NW)
+            d_count += 1
+            d_id = tk.Label(d_holder, text=img)
+            d_canvas.grid(row=d_row, column=d_col)
+            d_id.grid(row=d_row, column=d_id_col)
+            d_col += 2
+            d_id_col += 2
+            'Once we have 4 images in a row reset d_col and d_id_col'
+            if d_count % 2 == 0:
+                d_col = 0
+                d_id_col = 1
+                d_row += 1
+
+        if label == 'palmar':
+            p_img = create_thumbnail(img, 1)
+            p_canvas = tk.Canvas(p_holder, width=thumbnail_size[0], height=thumbnail_size[1])
+            p_photo = ImageTk.PhotoImage(image=Image.fromarray(p_img))
+            p_imgs.append(p_photo)
+            # Add a PhotoImage to the Canvas
+            p_canvas.create_image(0, 0, image=p_imgs[p_count], anchor=tk.NW)
+            p_count += 1
+            p_id = tk.Label(p_holder, text=img)
+            p_canvas.grid(row=p_row, column=p_col)
+            p_id.grid(row=p_row, column=p_id_col)
+            p_col += 2
+            p_id_col += 2
+            'Once we have 4 images in a row reset p_col and p_id_col'
+            if p_count % 2 == 0:
+                p_col = 4
+                p_id_col = 5
+                p_row += 1
+
+    frame.pack(expand=True, fill='both')
+    window.mainloop()
 
 
 def visualize_matching_images(q_img, images_data, k, m, technique, fm, label):
@@ -332,7 +519,7 @@ def visualize_matching_images(q_img, images_data, k, m, technique, fm, label):
     q_lbl.grid(row=0, column=0)
     q_name.grid(row=0, column=1)
     # q_row = tk.Frame(window)
-    q_cimg = create_thumbnail(q_img)
+    q_cimg = create_thumbnail(q_img, 6)
     q_canvas = tk.Canvas(q_header, width=thumbnail_size[0], height=thumbnail_size[1])
     q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_cimg))
     # Add a PhotoImage to the Canvas
@@ -364,7 +551,7 @@ def visualize_matching_images(q_img, images_data, k, m, technique, fm, label):
 
             row = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
 
-            tn_img = create_thumbnail(key)
+            tn_img = create_thumbnail(key, 6)
 
             # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
             height, width, no_channels = tn_img.shape
@@ -433,7 +620,7 @@ def visualize_data_ls(data_ls, technique, fm, label):
         v_row += 1
         for img, score in ls_list:
             row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
-            tn_img = create_thumbnail(img)
+            tn_img = create_thumbnail(img, 6)
             # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
             height, width, no_channels = tn_img.shape
             # Create a canvas that can fit the above image
@@ -553,7 +740,7 @@ def visualize_ftr_ls_hdp(feature_ls, technique, fm):
         v_row += 1
 
         row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
-        tn_img = create_thumbnail(img)
+        tn_img = create_thumbnail(img, 6)
         # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
         height, width, no_channels = tn_img.shape
         # Create a canvas that can fit the above image
@@ -596,7 +783,7 @@ def visualize_classified_image(q_img, classification, technique, fm, k):
     q_lbl.grid(row=0, column=0)
     q_name.grid(row=0, column=1)
     # q_row = tk.Frame(window)
-    q_cimg = create_thumbnail(q_img)
+    q_cimg = create_thumbnail(q_img, 6)
     q_canvas = tk.Canvas(q_header, width=thumbnail_size[0], height=thumbnail_size[1])
     q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_cimg))
     # Add a PhotoImage to the Canvas
@@ -652,7 +839,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
     img_col = 0
     id_col = 1
     for img in img_names:
-        q_img = create_thumbnail(img)
+        q_img = create_thumbnail(img, 6)
         q_canvas = tk.Canvas(q_holder, width=thumbnail_size[0], height=thumbnail_size[1])
         q_photo = ImageTk.PhotoImage(image=Image.fromarray(q_img))
         q_photos.append(q_photo)
@@ -688,7 +875,7 @@ def visualize_similar_subjects(q_subj, subject_dict, k, fm):
             s_imgs = get_subject_imgnames(s_collection)
 
             for img in s_imgs:
-                s_img = create_thumbnail(img)
+                s_img = create_thumbnail(img, 6)
                 s_canvas = tk.Canvas(subj_holder, width=thumbnail_size[0], height=thumbnail_size[1])
                 s_photo = ImageTk.PhotoImage(image=Image.fromarray(s_img))
                 subj_photos.append(s_photo)
@@ -789,7 +976,7 @@ def visualize_img_space(k, img_space):
         v_row += 1
         for img, score in ls_list:
             row = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
-            tn_img = create_thumbnail(img)
+            tn_img = create_thumbnail(img, 6)
             # Get the image dimensions (OpenCV stores image data as NumPy ndarray)
             height, width, no_channels = tn_img.shape
             # Create a canvas that can fit the above image
