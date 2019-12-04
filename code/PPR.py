@@ -230,7 +230,7 @@ class PersonalizedPageRank(object):
         if den != 0:
             successRatio = (count / den) * 100
             print(successRatio)
-        vz.visualize_labelled_images(classification_result, 0, 'PPR Based')
+        vz.visualize_labelled_images(classification_result, 0, 'PPR Based', 0, successRatio)
         return classification_result
 
 

@@ -227,9 +227,9 @@ k = 0
 # print(feature_df.shape)
 # feature_df.to_csv("output_pca_final.csv", index = False, header = False)
 
-img_df = pd.read_csv("output_pca_final.csv", header=None)
+img_df = pd.read_csv("../csv/output_pca_final.csv", header=None)
 # print(img_df.shape)
 
 result = img_ann(img_df, 'Hand_0000674.jpg', 20)
-print()
+print(len(result))
 print(result)

@@ -5,7 +5,7 @@ import os
 import pymongo
 from HorizontalScrollableFrame import HSF
 from VerticalScrollableFrame import VSF
-from PPR import PersonalizedPageRank
+# from PPR import PersonalizedPageRank
 import Constants as const
 from PIL import Image
 from PIL import ImageTk
@@ -17,6 +17,7 @@ metadata_width = 900
 imgspace_width = 1300
 ls_width = 1125
 subj_width = 1300
+unl_w = 1150
 data_ls_height = 780
 ftr_hdp_width = 1350
 ftr_hdp_height = 650
@@ -412,28 +413,36 @@ def visualize_ppr_images(q_imgs, images_data, k, K, dr_name):
     window.mainloop()
 
 
-def visualize_labelled_images(images_data, k, classifier):
-    print('Visualization for Labelled Images called')
+def visualize_labelled_images(images_data, k, classifier, c, accuracy):
+    print('Visualization for Unlabelled Images called')
     # Create a window
     window = tk.Tk()
-    frame = VSF(window, subj_width, data_ls_height)
-    title_txt = "Visualization of Labeled Images (Dorsal-hand vs Palmar-hand)"
+    frame = VSF(window, unl_w, data_ls_height)
+    title_txt = "Visualization of Unlabelled Images (Dorsal-hand vs Palmar-hand)"
+    # task 1
     if k != 0:
         title_txt = title_txt + ' using %d latent semantics' % k
+    # task 4
     if classifier != '':
         title_txt = title_txt + ' using %s classifier' % classifier
+    # task 2
+    if c != 0:
+        title_txt = title_txt + ' using descriptors from %d clusters' % c
     window.title(title_txt)
 
     d_imgs = []
-    d_row = 0
+    d_row = 1
     d_col = 0
     d_id_col = 1
     d_count = 0
     p_imgs = []
-    p_row = 0
+    p_row = 1
     p_col = 4
     p_id_col = 5
     p_count = 0
+
+    a_lbl = tk.Label(frame.scrollable_frame, text='Classification Accuracy: %d%s' % (accuracy, '%'))
+    a_lbl.grid(row=0, column=0, columnspan=8)
 
     # Initial box setup
     d_holder = tk.Frame(frame.scrollable_frame, relief=tk.RIDGE, borderwidth=2)
@@ -773,7 +782,7 @@ def visualize_ftr_ls_hdp(feature_ls, technique, fm):
 
 def visualize_classified_image(q_img, classification, technique, fm, k):
     window = tk.Tk()
-    title_txt = "Classification of Unlabeled Query Image for %s with %s Feature Descriptors" % (technique, fm)
+    title_txt = "Classification of Unlabelled Query Image for %s with %s Feature Descriptors" % (technique, fm)
     window.title(title_txt)
     q_header = tk.Frame(window, relief=tk.RIDGE, borderwidth=2)
     q_lbl = tk.Label(q_header, text='Query Image')
