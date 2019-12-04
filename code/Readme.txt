@@ -26,7 +26,7 @@ Example query to execute task 2 :-
     python phase3_main_script.py -t 2 -c 5 -l labelled_set2 -u unlabelled_set1
 
 Example query to execute task 3 :-
-    python phase3_main_script.py -t 3 -c 5 -m 10 -L "Hand_0008333.jpg Hand_0006183.jpg Hand_0000074" -l labelled_set2
+    python phase3_main_script.py -t 3 -c 5 -m 10 -I "Hand_0008333.jpg Hand_0006183.jpg Hand_0000074" -l labelled_set2
 
 Example query to execute task 4 :-
     python phase3_main_script.py -t 4 -c 5 -T PPR -l labelled_set2 -u unlabelled_set2
