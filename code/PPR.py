@@ -52,21 +52,21 @@ class PersonalizedPageRank(object):
         img_list = []
         csv_db1 = imagedb14[csv1]
         for row in csv_db1.find():
-            feature_desc.append(imagedb.image_models.find({"_id": row['imageName']})[0]["HOG"])
+            feature_desc.append(imagedb14.image_models.find({"_id": row['imageName']})[0]["bag_SIFT"])
             #feature_desc.append(descriptor["HOG"])
             img_list.append(row['imageName'])
         if csv2!="":
             csv_db2 = imagedb14[csv2]
             for row in csv_db2.find():
-                feature_desc.append(imagedb.image_models.find({"_id": row['imageName']})[0]["HOG"])
+                feature_desc.append(imagedb14.image_models.find({"_id": row['imageName']})[0]["bag_SIFT"])
                 img_list.append(row['imageName'])
         # nmf_ = NMF(n_components=30)
         # W = nmf_.fit_transform(feature_desc)
 
-        pca = PCA(55)
-        feature_desc_transformed = pca.fit_transform(feature_desc)
+        # pca = PCA(55)
+        # feature_desc_transformed = pca.fit_transform(feature_desc)
 
-        dist_matrix = self.calculateDistanceMatrix(feature_desc_transformed)
+        dist_matrix = self.calculateDistanceMatrix(feature_desc)
 
         sim_graph = [[-1 for j in range(len(dist_matrix))] for i in range(len(dist_matrix))]
 
@@ -179,13 +179,10 @@ class PersonalizedPageRank(object):
         labels = {}
         labels['dorsal'] = []
         labels['palmar'] = []
-        for row in imagedb14.labelled_set1.find():
-            if 'dorsal' in row['aspectOfHand'] and row['imageName'] in img_dict:
-                labels['dorsal'].append(img_dict[row['imageName']])
-            if 'palmar' in row['aspectOfHand'] and row['imageName'] in img_dict:
-                labels['palmar'].append(img_dict[row['imageName']])
 
-        for row in imagedb14.labelled_set2.find():
+        csv_db1 = imagedb14[csv1]
+
+        for row in csv_db1.find():
             if 'dorsal' in row['aspectOfHand'] and row['imageName'] in img_dict:
                 labels['dorsal'].append(img_dict[row['imageName']])
             if 'palmar' in row['aspectOfHand'] and row['imageName'] in img_dict:
@@ -194,19 +191,13 @@ class PersonalizedPageRank(object):
         page_rank_scores_for_label = self.ppr_classification(sim_graph, labels, k)
 
         classification_result = {}
-        for row in imagedb14.unlabelled_set1.find():
+        csv_db2 = imagedb14[csv2]
+        for row in csv_db2.find():
             if row['imageName'] in img_dict:
                 if page_rank_scores_for_label['dorsal'][img_dict[row['imageName']]] > page_rank_scores_for_label['palmar'][img_dict[row['imageName']]]:
                     classification_result[row['imageName']] = 'dorsal'
                 else:
                     classification_result[row['imageName']] = 'palmar'
-
-        for row in imagedb14.unlabelled_set2.find():
-            if row['imageName'] in img_dict:
-                if page_rank_scores_for_label['dorsal'][img_dict[row['imageName']]] < page_rank_scores_for_label['palmar'][img_dict[row['imageName']]]:
-                    classification_result[row['imageName']] = 'palmar'
-                else:
-                    classification_result[row['imageName']] = 'dorsal'
 
         count =0
         den = len(classification_result)
@@ -249,6 +240,6 @@ class PersonalizedPageRank(object):
 # x = PersonalizedPageRank()
 # x.getKDominantImagesUsingPPR(5,10, ['Hand_0008333.jpg', 'Hand_0006183.jpg','Hand_0000074.jpg'], 'labelled_set2')
 #
-# print(x.classifyUnlabelledImagesUsingPPR(5, 'labelled_set2','unlabelled_set2'))
+#print(x.classifyUnlabelledImagesUsingPPR(5, 'labelled_set2','unlabelled_set2'))
 
 
