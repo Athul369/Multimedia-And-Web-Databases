@@ -5,7 +5,9 @@ import os
 import pymongo
 from HorizontalScrollableFrame import HSF
 from VerticalScrollableFrame import VSF
-# from PPR import PersonalizedPageRank
+from PPR import PersonalizedPageRank
+from code.Task6_SVM import SVMrel_feed
+from code.Task6_DecTree import DecTreerel_feed
 import Constants as const
 from PIL import Image
 from PIL import ImageTk
@@ -88,8 +90,14 @@ def run_relevance_feedback(q_img, m, rf_technique, img_list, feedback, window):
 
     if rf_technique == 0:
         print('Call SVM API')
+        svm = SVMrel_feed()
+        rf_feedback = svm.relvancefeedbackSVM(img_list, rel_feedback)
+        visualize_relevance_feedback_from_list(q_img, rf_feedback, m)
     if rf_technique == 1:
         print('Call Decision Tree API')
+        dtree = DecTreerel_feed()
+        rf_feedback = dtree.relvancefeedbackDecTree(img_list, rel_feedback)
+        visualize_relevance_feedback_from_list(q_img, rf_feedback, m)
     if rf_technique == 2:
         print('Call PPR-Based API')
         ppr = PersonalizedPageRank()
@@ -97,6 +105,10 @@ def run_relevance_feedback(q_img, m, rf_technique, img_list, feedback, window):
         visualize_relevance_feedback_from_list(q_img, rf_feedback, m)
     if rf_technique == 3:
         print('Call Probabilistic API')
+        ppr = PersonalizedPageRank()
+        rf_feedback = ppr.relevanceFeedbackPPR(img_list, rel_feedback)
+        visualize_relevance_feedback_from_list(q_img, rf_feedback, m)
+        # visualize_relevance_feedback_from_list(q_img, rf_feedback, m)
 
 
 def visualize_relevance_feedback(q_img, images_data, m, L, k):
@@ -176,12 +188,12 @@ def visualize_relevance_feedback(q_img, images_data, m, L, k):
             canvas.grid(row=cur_row, column=img_col, rowspan=3)
             rel_num = tk.IntVar()
             rel_num.set(1)  # initializing the choice to be no label
+            imgs.append(item['ImageId'])
             for val, lbl in enumerate(rel_lbls):
                 rb = tk.Radiobutton(row, text=lbl[0], variable=rel_num, value=val)
                 rb.grid(row=cur_row, column=score_col)
                 # label = tk.Label(row, text=str(value))
                 cur_row += 1
-                imgs.append(item['ImageId'])
                 feedback[item['ImageId']] = (count, rel_num)
             # label.grid(row=cur_row, column=score_col)
             """ After adding the image thumbnail and score up the current row value. """
@@ -283,12 +295,12 @@ def visualize_relevance_feedback_from_list(q_img, images_data, m):
             canvas.grid(row=cur_row, column=img_col, rowspan=3)
             rel_num = tk.IntVar()
             rel_num.set(1)  # initializing the choice to be no label
+            imgs.append(img)
             for val, lbl in enumerate(rel_lbls):
                 rb = tk.Radiobutton(row, text=lbl[0], variable=rel_num, value=val)
                 rb.grid(row=cur_row, column=score_col)
                 # label = tk.Label(row, text=str(value))
                 cur_row += 1
-                imgs.append(img)
                 feedback[img] = (count, rel_num)
             # label.grid(row=cur_row, column=score_col)
             """ After adding the image thumbnail and score up the current row value. """

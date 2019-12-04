@@ -4,26 +4,27 @@ from sklearn.decomposition import PCA
 import numpy as np
 import svm
 from kernel import Kernel
-from decisiontreeclassifier import DecisionTreeClassifier as dt
 
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb = imagedb["image_models"]
+meta = imagedb["ImageMetadata"]
 
 
+class SVMrel_feed:
 
-class DecTreerel_feed:
-
-    def relvancefeedbackDecTree(self,image_list, relvance_dict):
-        a=0
-        model="HOG"
-        relevant_imagesList=[]
-        irrelevant_imagesList=[]
-        labels_training=[]
-        new_imageList=[]
+    def relvancefeedbackSVM(self, image_list, relvance_dict):
+        a = 0
+        print(image_list)
+        print(relvance_dict)
+        model = "HOG"
+        relevant_imagesList = []
+        irrelevant_imagesList = []
+        labels_training = []
+        new_imageList = []
         mydb = imagedb["image_models"]
-        _list=[]
+        _list = []
         print(image_list.__len__())
     #     Relevant and Irrelevant
     #     relevant_imagesList=relvance_dict["Relevant"]
@@ -36,9 +37,16 @@ class DecTreerel_feed:
 
         for index in relvance_dict["Irrelevant"]:
             new_imageList.append(image_list[index])
-            labels_training.append(0)
+            labels_training.append(-1)
             _list.append(index)
             irrelevant_imagesList.append(image_list[index])
+
+        # print('New Image List')
+        # print(new_imageList)
+        # print('Labels Training')
+        # print(labels_training)
+        # print('_list')
+        # print(_list)
 
         feature_desc_train=[]
         for image in image_list:
@@ -62,13 +70,21 @@ class DecTreerel_feed:
         feature_desc_transformed_training=np.asarray(feature_desc_transformed)
         feature_desc_transformed_testing=np.asarray(feature_desc_transformed_test)
 
-        y = DecTreerel_feed.classifyDecTree(feature_desc_transformed_training, labels_training,feature_desc_transformed_testing)
-        new_order=DecTreerel_feed.return_func(relevant_imagesList,irrelevant_imagesList, test_images, y)
+        y = SVMrel_feed.classifySVM(self, feature_desc_transformed_training, labels_training,feature_desc_transformed_testing)
+        # print('Test Images')
+        # print(test_images)
+        # print('Relevant ImageList')
+        # print(relevant_imagesList)
+        # print('Irrelevant ImageList')
+        # print(irrelevant_imagesList)
+        # print('y')
+        # print(y)
+        new_order=SVMrel_feed.return_func(self, relevant_imagesList,irrelevant_imagesList, test_images, y)
         print(new_order)
         print(new_order.__len__())
-        # return new_order
+        return new_order
 
-    def return_func(relevant_imagesList,irrelevant_imagesList, test_images, label_test):
+    def return_func(self, relevant_imagesList, irrelevant_imagesList, test_images, label_test):
         a=0
         newimage_list=[]
         for items in relevant_imagesList:
@@ -80,17 +96,16 @@ class DecTreerel_feed:
                 newimage_list.append(test_images[index])
         newimage_list.extend(irrelevant_imagesList)
         for index, item in enumerate(label_test):
-            if item == 0:
+            if item == -1:
                 newimage_list.append(test_images[index])
 
         return newimage_list
 
-    def classifyDecTree(trainingData,labels,testData):
+    def classifySVM(self, trainingData, labels, testData):
 
         # classifer = svm.binary_classification_smo(kernel=Kernel.linear())
-        # classifier = svm.binary_classification_smo(kernel=Kernel._polykernel(5))  # try 5 and 10 for dimensions in polykernel
+        classifier = svm.binary_classification_smo(kernel=Kernel._polykernel(5))  # try 5 and 10 for dimensions in polykernel
         # out_images = np.array(labels)
-        classifier = dt(4)
         for index, item in enumerate(labels):
             if item == 0:
                 labels[index] = -1
@@ -108,15 +123,15 @@ class DecTreerel_feed:
         print(y)
         return y
 
-
-if __name__ == '__main__':
-    t1 = DecTreerel_feed()
-    image_list=['Hand_0000002.jpg','Hand_0000003.jpg','Hand_0000004.jpg','Hand_0000005.jpg','Hand_0000006.jpg','Hand_0000007.jpg','Hand_0000008.jpg','Hand_0000009.jpg','Hand_0000010.jpg','Hand_0000011.jpg','Hand_0000012.jpg','Hand_0000013.jpg','Hand_0000014.jpg','Hand_0000015.jpg','Hand_0000016.jpg','Hand_0000020.jpg','Hand_0000021.jpg','Hand_0000022.jpg','Hand_0000023.jpg','Hand_0000024.jpg']
-    # t1.classify_DP(r"C:\Users\shadab\Documents\MWDB\project\phase3\phase3_sample_data\Unlabelled\Set3","LBP",20)
-    rel_dict={}
-    rel_dict["Relevant"]=[0,1,2,3,4,15]
-    rel_dict["Irrelevant"]=[10,11,12,13,14]
-    t1.relvancefeedbackDecTree(image_list,rel_dict)
+#
+# if __name__ == '__main__':
+#     # t1 = SVMrel_feed()
+#     # image_list = ['Hand_0000002.jpg','Hand_0000003.jpg','Hand_0000004.jpg','Hand_0000005.jpg','Hand_0000006.jpg','Hand_0000007.jpg','Hand_0000008.jpg','Hand_0000009.jpg','Hand_0000010.jpg','Hand_0000011.jpg','Hand_0000012.jpg','Hand_0000013.jpg','Hand_0000014.jpg','Hand_0000015.jpg','Hand_0000016.jpg','Hand_0000020.jpg','Hand_0000021.jpg','Hand_0000022.jpg','Hand_0000023.jpg','Hand_0000024.jpg']
+#     # # t1.classify_DP(r"C:\Users\shadab\Documents\MWDB\project\phase3\phase3_sample_data\Unlabelled\Set3","LBP",20)
+#     # rel_dict = {}
+#     # rel_dict["Relevant"] = [0,1,2,3,4,5,8]
+#     # rel_dict["Irrelevant"] = [10,11,12,13,14,15,19]
+#     # t1.relvancefeedbackSVM(image_list,rel_dict)
 
 #     relvance :
 #

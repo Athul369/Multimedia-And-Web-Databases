@@ -112,7 +112,7 @@ class DecTree:
         return (num_correct / len(true_labels)) * 100
 
 
-if __name__ == '__main__':
-    s1 = DecTree()
-    results = s1.preprocess_dectree("HOG", 30, "labelled_set2", "unlabelled_set2")
-    vz.visualize_labelled_images(results[0], 0, 'Decision Tree', 0, results[1])
+# if __name__ == '__main__':
+#     s1 = DecTree()
+#     results = s1.preprocess_dectree("HOG", 30, "labelled_set2", "unlabelled_set2")
+#     vz.visualize_labelled_images(results[0], 0, 'Decision Tree', 0, results[1])

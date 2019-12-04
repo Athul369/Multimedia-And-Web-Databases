@@ -4,6 +4,7 @@ import pymongo
 import Constants as const
 import feature_bow_extractor as fbe
 from sklearn.decomposition import PCA
+import Visualizer as vz
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
@@ -92,8 +93,10 @@ class Task1:
                 dict_ul[unlabelled_imagelist[index]] = 'palmar'
                 pred_labels.append(1)
         print(dict_ul)
-        Task1.accuracy(self, pred_labels, unlabelled_imagelist)
-        return dict_ul
+        t1_accuracy = Task1.accuracy(self, pred_labels, unlabelled_imagelist)
+        imagedb14.label_unlabel_bow.drop()
+
+        return dict_ul, t1_accuracy
 
     def accuracy(self, pred_labels, unlabelled_imgList):
         a = 0
@@ -111,6 +114,7 @@ class Task1:
             if pred_labels[i] == true_labels[i]:
                 num_correct += 1
         print(num_correct / len(true_labels))
+        return (num_correct / len(true_labels)) * 100
 
     def create_bow(self, model, k, labelled_csv, unlabelled_csv):
         label_meta_obj = imagedb14[labelled_csv]
@@ -127,7 +131,21 @@ class Task1:
 
 if __name__ == '__main__':
     t1 = Task1()
-    t1.create_bow("SIFT", 60, "labelled_set1", "unlabelled_set2")
-    image_classified = t1.classify_DP("SIFT", 50, "labelled_set1", "unlabelled_set2")
-    imagedb14.label_unlabel_bow.drop()
-    # t1.distirubution(r"C:\Users\shadab\Documents\MWDB\project\phase3\phase3_sample_data\Unlabelled\Set3", "HOG", 20)
+
+    # Task 1 Query 1
+    # t1.create_bow("SIFT", 60, "labelled_set1", "unlabelled_set1")
+    # results = t1.classify_DP("SIFT", 30, "labelled_set1", "unlabelled_set1")
+    # vz.visualize_labelled_images(results[0], 30, '', 0, results[1])
+
+    # # Task 1 Query 2
+    # t1.create_bow("SIFT", 60, "labelled_set1", "unlabelled_set2")
+    # results = t1.classify_DP("SIFT", 30, "labelled_set1", "unlabelled_set2")
+    # vz.visualize_labelled_images(results[0], 30, '', 0, results[1])
+    # # Task 1 Query 3
+    # t1.create_bow("SIFT", 60, "labelled_set2", "unlabelled_set1")
+    # results = t1.classify_DP("SIFT", 30, "labelled_set2", "unlabelled_set1")
+    # vz.visualize_labelled_images(results[0], 30, '', 0, results[1])
+    # # Task 1 Query 4
+    t1.create_bow("SIFT", 60, "labelled_set2", "unlabelled_set2")
+    results = t1.classify_DP("SIFT", 30, "labelled_set2", "unlabelled_set2")
+    vz.visualize_labelled_images(results[0], 30, '', 0, results[1])

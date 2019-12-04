@@ -127,7 +127,7 @@ class SVM:
         return (num_correct / len(true_labels)) * 100
 
 
-if __name__ == '__main__':
-    s1 = SVM()
-    results = s1.preprocess_SVM("HOG", 20, "labelled_set2", "unlabelled_set2")
-    vz.visualize_labelled_images(results[0], 0, 'SVM', 0, results[1])
+# if __name__ == '__main__':
+#     s1 = SVM()
+#     results = s1.preprocess_SVM("HOG", 20, "labelled_set2", "unlabelled_set2")
+#     vz.visualize_labelled_images(results[0], 0, 'SVM', 0, results[1])

@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.decomposition import NMF
 from sklearn.decomposition import PCA
 # from NonNegativeMatrix import NM_F
-import Visualizer as vz
+# import Visualizer as vz
 import pandas as pd
 import os
 import pymongo
@@ -93,10 +93,12 @@ class PersonalizedPageRank(object):
         # nmf_ = NMF(n_components=30)
         # W = nmf_.fit_transform(feature_desc)
 
-        pca = PCA(55)
-        feature_desc_transformed = pca.fit_transform(feature_desc)
+        # print('Feature Descriptor')
+        # print(feature_desc)
+        # pca = PCA(55)
+        # feature_desc_transformed = pca.fit_transform(feature_desc)
 
-        dist_matrix = self.calculateDistanceMatrix(feature_desc_transformed)
+        dist_matrix = self.calculateDistanceMatrix(feature_desc)
 
         sim_graph = [[-1 for j in range(len(dist_matrix))] for i in range(len(dist_matrix))]
 
@@ -158,7 +160,7 @@ class PersonalizedPageRank(object):
         count = 0
         print("\n\nNow printing top {} matched Images and their matching scores".format(K))
         # sorted_dict = sorted(rank_dict.items(), key=lambda item: item[1])
-        vz.visualize_ppr_images(seedList, rank_dict, k, K, dr_name)
+        # vz.visualize_ppr_images(seedList, rank_dict, k, K, dr_name)
         for key, value in sorted(rank_dict.items(), key=lambda item: item[1], reverse=True):
             if count < K:
                 print(key + " has matching score:: " + str(value))
@@ -218,7 +220,7 @@ class PersonalizedPageRank(object):
             successRatio = (count / den) * 100
             print(successRatio)
         # classification_result = reversed(sorted(classification_result.keys()))
-        vz.visualize_labelled_images(classification_result, 0, 'PPR Based', 0, successRatio)
+        # vz.visualize_labelled_images(classification_result, 0, 'PPR Based', 0, successRatio)
         return classification_result
 
 
