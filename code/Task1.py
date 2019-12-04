@@ -93,6 +93,7 @@ class Task1:
                 pred_labels.append(1)
         print(dict_ul)
         Task1.accuracy(pred_labels, unlabelled_imagelist)
+        return dict_ul
 
     def accuracy(pred_labels, unlabelled_imgList):
         a = 0
@@ -127,6 +128,6 @@ class Task1:
 if __name__ == '__main__':
     t1 = Task1()
     t1.create_bow("SIFT", 60, "labelled_set1", "unlabelled_set2")
-    t1.classify_DP("SIFT", 50, "labelled_set1", "unlabelled_set2")
+    image_classified=t1.classify_DP("SIFT", 50, "labelled_set1", "unlabelled_set2")
     imagedb14.label_unlabel_bow.drop()
     # t1.distirubution(r"C:\Users\shadab\Documents\MWDB\project\phase3\phase3_sample_data\Unlabelled\Set3", "HOG", 20)
