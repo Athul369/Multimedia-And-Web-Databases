@@ -228,6 +228,6 @@ def img_ann(img_df, query, k, num_layers=10, num_hash=10, layer_file_name=None):
 csv_path = os.path.join("..", "csv", "output_pca_final.csv")
 img_df = pd.read_csv(csv_path, header = None)
 
-result = img_ann(img_df, 'Hand_0000674.jpg', 20)
+result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 10)
 print()
 print(result)
