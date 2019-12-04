@@ -4,6 +4,8 @@ from functools import reduce
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
 import Constants as const
+import Visualizer as vz
+import os
 
 from LocalBinaryPatterns import LBP
 from ColorMoments import CM
@@ -135,7 +137,7 @@ def getFeature(query_path, model_name):
     return lst
 
 
-def img_ann(img_df, query, k, num_layers=10, num_hash=10, layer_file_name=None):
+def img_ann(img_df, query, k, num_layers, num_hash, layer_file_name=None):
     image_ids = img_df.iloc[:, 0]
     w = 50
     dim = img_df.shape[1]
@@ -145,6 +147,9 @@ def img_ann(img_df, query, k, num_layers=10, num_hash=10, layer_file_name=None):
     lsh = LSH(hash_obj=l2_dist_obj, num_layers=num_layers, num_hash=num_hash, vec=vec, b=b, w=w)
     # LSH index structure
     hash_table = lsh.create_hash_table(img_df.values)
+    dump_file = os.path.join("..", "csv", "hashtable.csv")
+    df = pd.DataFrame(hash_table)
+    df.to_csv(dump_file, index=False, header=False)
     query_vec = img_df.loc[img_df[0] == query]
     query_vec = query_vec.iloc[:, 1:].values[0]
 
@@ -160,8 +165,8 @@ def img_ann(img_df, query, k, num_layers=10, num_hash=10, layer_file_name=None):
 
 ################################### MAIN FUNCTION #####################################
 
-imgdf = None
-k = 0
+# imgdf = None
+# k = 0
 
 # n = imagedb.image_models.count()
 
@@ -227,9 +232,18 @@ k = 0
 # print(feature_df.shape)
 # feature_df.to_csv("output_pca_final.csv", index = False, header = False)
 
-img_df = pd.read_csv("../csv/output_pca_final.csv", header=None)
+csv_path = os.path.join('..', 'csv', 'output_pca_final.csv')
+img_df = pd.read_csv(csv_path, header=None)
 # print(img_df.shape)
 
-result = img_ann(img_df, 'Hand_0000674.jpg', 20)
+# Task 5 Query 1
+result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 10)
+vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 10, 10)
+# Task 5 Query 2
+# result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 13)
+# vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 10, 13)
+# Task 5 Query 3
+# result = img_ann(img_df, 'Hand_0000674.jpg', 20, 5, 10)
+# vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 5, 10)
 print(len(result))
 print(result)

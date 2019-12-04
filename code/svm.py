@@ -1,5 +1,5 @@
 import numpy as np
-from cvxopt import matrix,solvers
+from cvxopt import matrix, solvers
 from collections import OrderedDict
 
 

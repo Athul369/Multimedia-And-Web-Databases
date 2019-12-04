@@ -5,6 +5,7 @@ import Constants as const
 from sklearn.decomposition import PCA
 import svm
 from kernel import Kernel
+import Visualizer as vz
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
@@ -48,8 +49,8 @@ class SVM:
         # print(feature_desc_transformed)
         print(feature_desc_transformed)
         # print(feature_desc_transformed.)
-        labels = SVM.labelData(img_list, labelled_csv)
-        image_label_dict= SVM.classifySVM(feature_desc_transformed, labels, model, k, unlablled_csv)
+        labels = SVM.labelData(self, img_list, labelled_csv)
+        image_label_dict = SVM.classifySVM(self, feature_desc_transformed, labels, model, k, unlablled_csv)
         return image_label_dict
 
     def labelData(self, img_list, labelled_csv):
@@ -97,7 +98,7 @@ class SVM:
         y = classifier.predict(testingData)
         print(y)
 
-        SVM.accuracy(y, unlabelled_imgList)
+        svm_accuracy = SVM.accuracy(self, y, unlabelled_imgList)
         dict = {}
         for index, item in enumerate(unlabelled_imgList):
             if y[index] == -1:
@@ -105,7 +106,7 @@ class SVM:
             else:
                 dict[item] = 'palmar'
         print(dict)
-        return dict
+        return dict, svm_accuracy
 
     def accuracy(self, pred_labels, unlabelled_imgList):
         a = 0
@@ -123,8 +124,10 @@ class SVM:
             if pred_labels[i] == true_labels[i]:
                 num_correct += 1
         print(num_correct / len(true_labels))
+        return (num_correct / len(true_labels)) * 100
 
 
 if __name__ == '__main__':
     s1 = SVM()
-    s1.preprocess_SVM("HOG", 20, "labelled_set1", "unlabelled_set1")
+    results = s1.preprocess_SVM("HOG", 20, "labelled_set2", "unlabelled_set2")
+    vz.visualize_labelled_images(results[0], 0, 'SVM', 0, results[1])

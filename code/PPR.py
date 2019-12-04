@@ -20,7 +20,7 @@ class PersonalizedPageRank(object):
 
         for i in range(len(transformed_matrix)):
             for j in range(len(transformed_matrix)):
-                if i==j:
+                if i == j:
                     continue
                 euc_dis = np.square(np.subtract(transformed_matrix[i], transformed_matrix[j]))
                 match_score = np.sqrt(euc_dis.sum(0))
@@ -51,12 +51,9 @@ class PersonalizedPageRank(object):
     #
     #     return img_list, sim_graph
 
-    def calculateImageSimilarityGraph(self, k, csv1, csv2):
+    def calculateImageSimilarityGraph(self, k, csv1, csv2=""):
         feature_desc = []
         img_list = []
-        for descriptor in imagedb14.image_models.find():
-            feature_desc.append(descriptor["HOG"])
-            img_list.append(descriptor["_id"])
         csv_db1 = imagedb14[csv1]
         for row in csv_db1.find():
             feature_desc.append(imagedb14.image_models.find({"_id": row['imageName']})[0]["bag_SIFT"])
@@ -220,6 +217,7 @@ class PersonalizedPageRank(object):
         if den != 0:
             successRatio = (count / den) * 100
             print(successRatio)
+        # classification_result = reversed(sorted(classification_result.keys()))
         vz.visualize_labelled_images(classification_result, 0, 'PPR Based', 0, successRatio)
         return classification_result
 
@@ -251,9 +249,11 @@ class PersonalizedPageRank(object):
 
 x = PersonalizedPageRank()
 # x.getKDominantImagesUsingPPR(5, 10, ['Hand_0008333.jpg', 'Hand_0006183.jpg', 'Hand_0000074.jpg'], 'labelled_set2')
-# x.getKDominantImagesUsingPPR(5, 10, ['Hand_0003457.jpg', 'Hand_0000074.jpg', 'Hand_0005661.jpg'])
+# x.getKDominantImagesUsingPPR(5, 10, ['Hand_0003457.jpg', 'Hand_0000074.jpg', 'Hand_0005661.jpg'], 'labelled_set2')
 
 #
-print(x.classifyUnlabelledImagesUsingPPR(5, 'labelled_set2', 'unlabelled_set2'))
+x.classifyUnlabelledImagesUsingPPR(5, 'labelled_set2', 'unlabelled_set2')
+# vz.visualize_labelled_images(results[0], 0, 'PPR', 0, results[1])
+# print()
 
 

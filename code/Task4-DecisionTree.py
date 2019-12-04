@@ -3,6 +3,7 @@ import pymongo
 import Constants as const
 from sklearn.decomposition import PCA
 import numpy as np
+import Visualizer as vz
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
@@ -40,11 +41,11 @@ class DecTree:
         # print(feature_desc_transformed)
         print(feature_desc_transformed)
         # print(feature_desc_transformed.)
-        labels = DecTree.labelData(img_list, labelled_csv)
-        image_label_dict = DecTree.classifyDecTree(feature_desc_transformed, labels, model, k, unlablled_csv)
+        labels = DecTree.labelData(self, img_list, labelled_csv)
+        image_label_dict = DecTree.classifyDecTree(self, feature_desc_transformed, labels, model, k, unlablled_csv)
         return image_label_dict
 
-    def labelData(img_list,labelled_csv):
+    def labelData(self, img_list,labelled_csv):
         a=0
         labels = []
         imagedb1_4 = imagedb14[labelled_csv]
@@ -59,7 +60,7 @@ class DecTree:
         # print(img_list)
         return labels
 
-    def classifyDecTree(trainingData, labels, model, k,unlablled_csv):
+    def classifyDecTree(self, trainingData, labels, model, k,unlablled_csv):
         a = 0
         # classifer = svm.binary_classification_smo(kernel=Kernel.linear())
         classifier = dt(4)
@@ -82,7 +83,7 @@ class DecTree:
         testingData = pca.fit_transform(feature_descriptorUnlabelled)
         y = classifier.predict(testingData)
         print(y)
-        DecTree.accuracy(y,unlabelled_imgList)
+        dt_accuracy = DecTree.accuracy(self, y, unlabelled_imgList)
         dict = {}
         for index, item in enumerate(unlabelled_imgList):
             if y[index] == 0:
@@ -90,9 +91,9 @@ class DecTree:
             else:
                 dict[item] = 'palmar'
         print(dict)
-        return dict
+        return dict, dt_accuracy
 
-    def accuracy(pred_labels, unlabelled_imgList):
+    def accuracy(self, pred_labels, unlabelled_imgList):
         a = 0
         metainfo = imagedb["HandInfo"]
         true_labels = []
@@ -108,9 +109,10 @@ class DecTree:
             if pred_labels[i] == true_labels[i]:
                 num_correct += 1
         print(num_correct / len(true_labels))
+        return (num_correct / len(true_labels)) * 100
 
 
 if __name__ == '__main__':
     s1 = DecTree()
-    s1.preprocess_dectree("HOG", 30, "labelled_set1", "unlabelled_set1")
-
+    results = s1.preprocess_dectree("HOG", 30, "labelled_set2", "unlabelled_set2")
+    vz.visualize_labelled_images(results[0], 0, 'Decision Tree', 0, results[1])
