@@ -14,6 +14,7 @@ import Constants as const
 
 client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
+imagedb14 = client["imagedb14"]
 mydb = imagedb["image_models"]
 cluster_centers = imagedb["centroids"]
 subjects = imagedb["subjects"]
@@ -46,7 +47,7 @@ def subjectMeta():
 
 def createKMeans(model, k):
     feature_desc = None
-    for descriptor in imagedb.image_models.find():
+    for descriptor in imagedb14.image_models.find():
         if feature_desc is None:
             feature_desc = pd.DataFrame(descriptor[model])
         else:
@@ -60,7 +61,7 @@ def createKMeans(model, k):
     centroids_dict[model] = centers.tolist()
     imagedb.centroids.insert_one(centroids_dict)
 
-    for item in imagedb.image_models.find():
+    for item in imagedb14.image_models.find():
         img = pd.DataFrame(item[model])
         x = ret.predict(img)
         bag = np.zeros((k,), dtype=int)
@@ -68,18 +69,20 @@ def createKMeans(model, k):
             bag[z-1] += 1
         imageID = item["_id"]
         bag = bag.tolist()
-        imagedb.image_models.update_one({"_id": imageID}, {"$set": {"bag_"+model: bag}})
+        imagedb14.image_models.update_one({"_id": imageID}, {"$set": {"bag_"+model: bag}})
 
 
 def calculate_fd(path):
     for image in glob.glob(os.path.join(path, "*.jpg")):
         dict = {}
-        dict["_id"] = image[-16:]
+        head, tail = os.path.split(image)
+        # dict["_id"] = image[-16:]
+        dict["_id"] = tail
 
-        md = CM(image)
-        lst = md.getFeatureDescriptors()
-        #print(lst)
-        dict["CM"] = lst
+        # md = CM(image)
+        # lst = md.getFeatureDescriptors()
+        # #print(lst)
+        # dict["CM"] = lst
 
         md = LBP(image)
         lst = md.getFeatureDescriptors()
@@ -97,12 +100,12 @@ def calculate_fd(path):
         #dict["HOG"] = lst.tolist()
         #print(type(lst.tolist()))
 
-        rec = imagedb.image_models.insert_one(dict)
+        rec = imagedb14.image_models.insert_one(dict)
 
 
 # Main
 # imagedb.image_models.drop()
-# imagedb.subjects.drop()
+#imagedb.subjects.drop()
 # path = input("Enter Path: ")
 # calculate_fd(path)
 #

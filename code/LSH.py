@@ -232,18 +232,18 @@ def img_ann(img_df, query, k, num_layers, num_hash, layer_file_name=None):
 # print(feature_df.shape)
 # feature_df.to_csv("output_pca_final.csv", index = False, header = False)
 
-csv_path = os.path.join('..', 'csv', 'output_pca_final.csv')
-img_df = pd.read_csv(csv_path, header=None)
-# print(img_df.shape)
-
-# Task 5 Query 1
-result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 10)
-vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 10, 10)
-# Task 5 Query 2
-# result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 13)
-# vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 10, 13)
-# Task 5 Query 3
-# result = img_ann(img_df, 'Hand_0000674.jpg', 20, 5, 10)
-# vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 5, 10)
-print(len(result))
-print(result)
+# csv_path = os.path.join('..', 'csv', 'output_pca_final.csv')
+# img_df = pd.read_csv(csv_path, header=None)
+# # print(img_df.shape)
+#
+# # Task 5 Query 1
+# result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 10)
+# vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 10, 10)
+# # Task 5 Query 2
+# # result = img_ann(img_df, 'Hand_0000674.jpg', 20, 10, 13)
+# # vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 10, 13)
+# # Task 5 Query 3
+# # result = img_ann(img_df, 'Hand_0000674.jpg', 20, 5, 10)
+# # vz.visualize_relevance_feedback('Hand_0000674.jpg', result, 20, 5, 10)
+# print(len(result))
+# print(result)

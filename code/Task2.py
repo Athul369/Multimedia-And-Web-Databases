@@ -157,5 +157,5 @@ def Query_input(c, folder, classfiy):
 # result = Query_input(5, "labelled_set2", "unlabelled_set2")
 # vz.visualize_labelled_images(result[0], 0, '', 5, result[1])
 
-result = Query_input(10, "labelled_set2", "unlabelled_set2")
-vz.visualize_labelled_images(result[0], 0, '', 10, result[1])
+# result = Query_input(10, "labelled_set2", "unlabelled_set2")
+# vz.visualize_labelled_images(result[0], 0, '', 10, result[1])

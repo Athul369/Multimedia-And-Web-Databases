@@ -11,6 +11,7 @@ client = pymongo.MongoClient('localhost', const.MONGODB_PORT)
 imagedb = client["imagedb"]
 mydb11k = imagedb["image_models"]
 imagedb14 = client["imagedb14"]
+mydb14 = imagedb14["image_models"]
 
 
 class SVM:
@@ -39,18 +40,21 @@ class SVM:
         #     img_list.append(descriptor["_id"])
 
         for image in dorsal_imagelist:
-            feature_desc.append(mydb11k.find({"_id": image})[0][model])
+            feature_desc.append(mydb14.find({"_id": image})[0][model])
             img_list.append(image)
         for image in palmar_imagelist:
-            feature_desc.append(mydb11k.find({"_id": image})[0][model])
+            feature_desc.append(mydb14.find({"_id": image})[0][model])
             img_list.append(image)
 
-        feature_desc_transformed = pca.fit_transform(feature_desc)
+        # feature_desc_transformed = pca.fit_transform(feature_desc)
         # print(feature_desc_transformed)
-        print(feature_desc_transformed)
+        # print(feature_desc_transformed)
         # print(feature_desc_transformed.)
+        feature_desc_transformed=np.asarray(feature_desc)
         labels = SVM.labelData(self, img_list, labelled_csv)
         image_label_dict = SVM.classifySVM(self, feature_desc_transformed, labels, model, k, unlablled_csv)
+        # image_label_dict = SVM.classifySVM(self, feature_desc, labels, model, k, unlablled_csv)
+
         return image_label_dict
 
     def labelData(self, img_list, labelled_csv):
@@ -61,7 +65,7 @@ class SVM:
         for image in img_list:
             print(image)
             if 'dorsal' in imagedb1_4.find({'imageName': image})[0]['aspectOfHand']:
-                labels.append(0)
+                labels.append(-1)
             else:
                 labels.append(1)
         print(labels)
@@ -74,9 +78,9 @@ class SVM:
         classifier = svm.binary_classification_smo(
             kernel=Kernel._polykernel(5))  # try 5 and 10 for dimensions in polykernel
         # out_images = np.array(labels)
-        for index, item in enumerate(labels):
-            if item == 0:
-                labels[index] = -1
+        # for index, item in enumerate(labels):
+        #     if item == 0:
+        #         labels[index] = -1
         print(labels)
         labels_training = np.asarray(labels)
         # label_rep = np.where(labels <= 0, -1, 1)
@@ -88,24 +92,25 @@ class SVM:
         unlabelled_imgList = []
         for descriptor in imagedb1_4.find():
             unlabelled_imgList.append(descriptor["imageName"])
-        print(unlabelled_imgList)
+        # print(unlabelled_imgList)
         for image in unlabelled_imgList:
-            feature_descriptorUn.append(mydb11k.find({"_id": image})[0][model])
-        print(feature_descriptorUn)
+            feature_descriptorUn.append(mydb14.find({"_id": image})[0][model])
+        # print(feature_descriptorUn)
         pca = PCA(k)
         feature_descriptorUnlabelled = np.asarray(feature_descriptorUn)
-        testingData = pca.fit_transform(feature_descriptorUnlabelled)
-        y = classifier.predict(testingData)
+        # testingData = pca.fit_transform(feature_descriptorUnlabelled)
+        y = classifier.predict(feature_descriptorUnlabelled)
         print(y)
 
         svm_accuracy = SVM.accuracy(self, y, unlabelled_imgList)
+        # print(svm_accuracy)
         dict = {}
         for index, item in enumerate(unlabelled_imgList):
             if y[index] == -1:
                 dict[item] = 'dorsal'
             else:
                 dict[item] = 'palmar'
-        print(dict)
+        # print(dict)
         return dict, svm_accuracy
 
     def accuracy(self, pred_labels, unlabelled_imgList):
@@ -123,7 +128,7 @@ class SVM:
         for i in range(len(pred_labels)):
             if pred_labels[i] == true_labels[i]:
                 num_correct += 1
-        print(num_correct / len(true_labels))
+        # print(num_correct / len(true_labels))
         return (num_correct / len(true_labels)) * 100
 
 

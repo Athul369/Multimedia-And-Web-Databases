@@ -129,8 +129,8 @@ class Task1:
         fbe.calculate_Bow_unlabelled_imgs(img_list, model, k)
 
 
-if __name__ == '__main__':
-    t1 = Task1()
+# if __name__ == '__main__':
+#     t1 = Task1()
 
     # Task 1 Query 1
     # t1.create_bow("SIFT", 60, "labelled_set1", "unlabelled_set1")
@@ -146,6 +146,6 @@ if __name__ == '__main__':
     # results = t1.classify_DP("SIFT", 30, "labelled_set2", "unlabelled_set1")
     # vz.visualize_labelled_images(results[0], 30, '', 0, results[1])
     # # Task 1 Query 4
-    t1.create_bow("SIFT", 60, "labelled_set2", "unlabelled_set2")
-    results = t1.classify_DP("SIFT", 30, "labelled_set2", "unlabelled_set2")
-    vz.visualize_labelled_images(results[0], 30, '', 0, results[1])
+    # t1.create_bow("SIFT", 60, "labelled_set2", "unlabelled_set2")
+    # results = t1.classify_DP("SIFT", 30, "labelled_set2", "unlabelled_set2")
+# vz.visualize_labelled_images(results[0], 30, '', 0, results[1])

@@ -37,7 +37,8 @@ class DecTree:
             feature_desc.append(mydb11k.find({"_id": image})[0][model])
             img_list.append(image)
 
-        feature_desc_transformed = pca.fit_transform(feature_desc)
+        # feature_desc_transformed = pca.fit_transform(feature_desc)
+        feature_desc_transformed=np.asarray(feature_desc)
         # print(feature_desc_transformed)
         print(feature_desc_transformed)
         # print(feature_desc_transformed.)
@@ -80,8 +81,8 @@ class DecTree:
         # print(feature_descriptorUn)
         pca = PCA(k)
         feature_descriptorUnlabelled = np.asarray(feature_descriptorUn)
-        testingData = pca.fit_transform(feature_descriptorUnlabelled)
-        y = classifier.predict(testingData)
+        # testingData = pca.fit_transform(feature_descriptorUnlabelled)
+        y = classifier.predict(feature_descriptorUnlabelled)
         print(y)
         dt_accuracy = DecTree.accuracy(self, y, unlabelled_imgList)
         dict = {}
@@ -108,7 +109,7 @@ class DecTree:
         for i in range(len(pred_labels)):
             if pred_labels[i] == true_labels[i]:
                 num_correct += 1
-        print(num_correct / len(true_labels))
+        # print(num_correct / len(true_labels))
         return (num_correct / len(true_labels)) * 100
 
 

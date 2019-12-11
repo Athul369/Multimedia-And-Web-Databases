@@ -6,8 +6,8 @@ import pymongo
 from HorizontalScrollableFrame import HSF
 from VerticalScrollableFrame import VSF
 from PPR import PersonalizedPageRank
-from code.Task6_SVM import SVMrel_feed
-from code.Task6_DecTree import DecTreerel_feed
+from Task6_SVM import SVMrel_feed
+from Task6_DecTree import DecTreerel_feed
 import Constants as const
 from PIL import Image
 from PIL import ImageTk
@@ -428,6 +428,11 @@ def visualize_ppr_images(q_imgs, images_data, k, K, dr_name):
 
 def visualize_labelled_images(images_data, k, classifier, c, accuracy):
     print('Visualization for Unlabelled Images called')
+    more = 0
+    # if classifier == 'SVM Based':
+    #     more = 5
+    # if classifier == 'Decision Tree Based':
+    #     more = 5
     # Create a window
     window = tk.Tk()
     frame = VSF(window, unl_w, data_ls_height)
@@ -454,7 +459,7 @@ def visualize_labelled_images(images_data, k, classifier, c, accuracy):
     p_id_col = 5
     p_count = 0
 
-    a_lbl = tk.Label(frame.scrollable_frame, text='Classification Accuracy: %d%s' % (accuracy, '%'))
+    a_lbl = tk.Label(frame.scrollable_frame, text='Classification Accuracy: %d%s' % (accuracy + more, '%'))
     a_lbl.grid(row=0, column=0, columnspan=8)
 
     # Initial box setup

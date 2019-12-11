@@ -168,6 +168,7 @@ class PersonalizedPageRank(object):
                 count += 1
             else:
                 break
+        return rank_dict, dr_name
 
 
     def ppr_classification(self, sim_graph, labels, k):
@@ -221,7 +222,7 @@ class PersonalizedPageRank(object):
             print(successRatio)
         # classification_result = reversed(sorted(classification_result.keys()))
         # vz.visualize_labelled_images(classification_result, 0, 'PPR Based', 0, successRatio)
-        return classification_result
+        return classification_result, successRatio
 
 
 
@@ -249,12 +250,12 @@ class PersonalizedPageRank(object):
 
 # Uncomment below lines to run PPR cases
 
-x = PersonalizedPageRank()
-# x.getKDominantImagesUsingPPR(5, 10, ['Hand_0008333.jpg', 'Hand_0006183.jpg', 'Hand_0000074.jpg'], 'labelled_set2')
-# x.getKDominantImagesUsingPPR(5, 10, ['Hand_0003457.jpg', 'Hand_0000074.jpg', 'Hand_0005661.jpg'], 'labelled_set2')
-
+# x = PersonalizedPageRank()
+# # x.getKDominantImagesUsingPPR(5, 10, ['Hand_0008333.jpg', 'Hand_0006183.jpg', 'Hand_0000074.jpg'], 'labelled_set2')
+# # x.getKDominantImagesUsingPPR(5, 10, ['Hand_0003457.jpg', 'Hand_0000074.jpg', 'Hand_0005661.jpg'], 'labelled_set2')
 #
-x.classifyUnlabelledImagesUsingPPR(5, 'labelled_set2', 'unlabelled_set2')
+# #
+# x.classifyUnlabelledImagesUsingPPR(5, 'labelled_set2', 'unlabelled_set2')
 # vz.visualize_labelled_images(results[0], 0, 'PPR', 0, results[1])
 # print()
 
